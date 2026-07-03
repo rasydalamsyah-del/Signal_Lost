@@ -23,7 +23,7 @@
 
     const list = root.querySelector('#chat-list');
     if (chatIds.length === 0) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-glyph">◐</div><p>Belum ada percakapan.</p></div>`;
+      list.innerHTML = `<div class="empty-state"><div class="empty-glyph">${ICONS.dashchat}</div><p>Belum ada percakapan.</p></div>`;
       return;
     }
 
@@ -62,7 +62,7 @@
         </div>
         <div class="chat-input-row">
           <input class="chat-input" id="chat-input" type="text" placeholder="Tulis pesan...">
-          <button class="chat-send" id="chat-send">➤</button>
+          <button class="chat-send" id="chat-send">${ICONS.send}</button>
         </div>
       </div>
     `;
