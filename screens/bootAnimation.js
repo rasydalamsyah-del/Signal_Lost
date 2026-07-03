@@ -13,6 +13,7 @@
   function render(root) {
     root.innerHTML = `
       <div class="boot-screen">
+        <div class="boot-logo">SL</div>
         <div class="boot-text" id="boot-text">${LINES[0]}</div>
         <div class="boot-bar"><div class="boot-bar-fill"></div></div>
       </div>
@@ -29,7 +30,7 @@
 
     setTimeout(() => {
       clearInterval(interval);
-      if (Router.currentId() === 'boot') Router.home();
+      if (Router.currentId() === 'boot') Router.replace('lock');
     }, 1700);
   }
 

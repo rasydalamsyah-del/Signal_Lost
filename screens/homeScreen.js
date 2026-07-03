@@ -2,20 +2,21 @@
    screens/homeScreen.js
    The hub screen. Add/remove entries in APPS to add/remove
    "apps" from the home grid — each id must match a Router
-   registration made in apps/*.js.
+   registration made in apps/*.js, an ICONS[id] SVG, and an
+   ICON_BG[id] gradient pair in assets/icons.js.
    ============================================================ */
 (function () {
   const APPS = [
-    { id: 'dashchat', label: 'DashChat', glyph: '◐', cls: 'icon-dashchat', badgeKey: 'unreadChats' },
-    { id: 'contacts', label: 'Kontak', glyph: '☰', cls: 'icon-contacts', badgeKey: 'newContacts' },
-    { id: 'snaply', label: 'Snaply', glyph: '◎', cls: 'icon-snaply' },
-    { id: 'stremly', label: 'Stremly', glyph: '▶', cls: 'icon-stremly' },
-    { id: 'gallery', label: 'Gallery', glyph: '▧', cls: 'icon-gallery' },
-    { id: 'storage', label: 'Storage', glyph: '⇊', cls: 'icon-storage' },
-    { id: 'myshop', label: 'MyShop', glyph: '$', cls: 'icon-myshop' },
-    { id: 'location', label: 'Location', glyph: '◈', cls: 'icon-location' },
-    { id: 'calendar', label: 'Kalender', glyph: '▦', cls: 'icon-calendar' },
-    { id: 'settings', label: 'Pengaturan', glyph: '⚙', cls: 'icon-settings' }
+    { id: 'dashchat', label: 'DashChat' },
+    { id: 'contacts', label: 'Kontak' },
+    { id: 'snaply', label: 'Snaply' },
+    { id: 'stremly', label: 'Stremly' },
+    { id: 'gallery', label: 'Gallery' },
+    { id: 'storage', label: 'Storage' },
+    { id: 'myshop', label: 'MyShop' },
+    { id: 'location', label: 'Location' },
+    { id: 'calendar', label: 'Kalender' },
+    { id: 'settings', label: 'Pengaturan' }
   ];
 
   const DAY_NAMES = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'];
@@ -28,7 +29,6 @@
       return n > 0 ? n : null;
     }
     if (app.id === 'dashchat') {
-      // naive "unread" heuristic: last message is from "them"
       let n = 0;
       Object.values(s.chats).forEach(c => {
         const last = c.messages[c.messages.length - 1];
@@ -52,10 +52,11 @@
         <div class="app-grid">
           ${APPS.map(app => {
             const badge = badgeFor(app);
+            const [from, to] = ICON_BG[app.id];
             return `
             <button class="app-icon" data-app="${app.id}">
-              <span class="app-icon-glyph ${app.cls}">
-                ${app.glyph}
+              <span class="app-icon-glyph" style="background:linear-gradient(155deg, ${from}, ${to})">
+                ${ICONS[app.id]}
                 ${badge ? `<span class="app-icon-badge">${badge}</span>` : ''}
               </span>
               <span class="app-icon-label">${app.label}</span>

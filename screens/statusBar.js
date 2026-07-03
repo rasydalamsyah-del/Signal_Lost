@@ -1,8 +1,8 @@
 /* ============================================================
    screens/statusBar.js
    Keeps the clock ticking and reflects AppState.phone (network /
-   battery) into the status bar. Also usable by the story to
-   trigger "signal lost" moments (drop network to 0).
+   battery) into the status bar, using real SVG icons from
+   assets/icons.js. Also drives the dynamic-island "live" pulse.
    ============================================================ */
 (function () {
   function pad(n) { return n.toString().padStart(2, '0'); }
@@ -14,13 +14,30 @@
     el.textContent = pad(now.getHours()) + ':' + pad(now.getMinutes());
   }
 
+  function signalBarsSvg(bars) {
+    // 4 vertical bars, filled up to `bars`, drawn on a 24x24 grid
+    const heights = [7, 11, 15, 19];
+    const xs = [2, 8, 14, 20];
+    const rects = heights.map((h, i) => {
+      const filled = i < bars;
+      const y = 21 - h;
+      return `<rect x="${xs[i]}" y="${y}" width="3.6" height="${h}" rx="1" fill="currentColor" opacity="${filled ? 1 : 0.25}"/>`;
+    }).join('');
+    return `<svg viewBox="0 0 24 24">${rects}</svg>`;
+  }
+
   function renderNetwork() {
     const el = document.getElementById('status-network');
     if (!el) return;
     const bars = AppState.get().phone.network;
-    const glyphs = ['✕', '▂', '▂▄', '▂▄▆', '▂▄▆█'];
-    el.textContent = glyphs[Math.max(0, Math.min(4, bars))];
-    el.style.color = bars === 0 ? 'var(--interference)' : 'var(--signal)';
+    el.innerHTML = signalBarsSvg(bars);
+    el.style.color = bars === 0 ? 'var(--interference)' : 'var(--ghost)';
+  }
+
+  function renderWifi() {
+    const el = document.getElementById('status-wifi');
+    if (!el) return;
+    el.innerHTML = ICONS.wifi;
   }
 
   function renderBattery() {
@@ -31,7 +48,13 @@
     fill.style.background = pct <= 15 ? 'var(--interference)' : 'var(--signal)';
   }
 
-  function renderAll() { renderClock(); renderNetwork(); renderBattery(); }
+  function renderIsland() {
+    const el = document.getElementById('dynamic-island');
+    if (!el) return;
+    el.classList.toggle('pulse', AppState.get().phone.network > 0);
+  }
+
+  function renderAll() { renderClock(); renderNetwork(); renderWifi(); renderBattery(); renderIsland(); }
 
   document.addEventListener('DOMContentLoaded', () => {
     renderAll();

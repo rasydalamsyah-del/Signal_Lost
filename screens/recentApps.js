@@ -1,7 +1,8 @@
 /* ============================================================
    screens/recentApps.js
-   Shows apps opened recently, lets the player jump back into one
-   (or notice one opened "by itself" — good horror/mystery hook).
+   Shows apps opened recently with their real icon, lets the
+   player jump back into one, or dismiss it from the stack —
+   good horror/mystery hook if an app "reopens itself".
    ============================================================ */
 (function () {
   const NAMES = {
@@ -23,7 +24,7 @@
     root.innerHTML = `
       <div class="recent-screen">
         <div class="recent-title">Aplikasi terbaru</div>
-        <div id="recent-list"></div>
+        <div class="recent-stack" id="recent-list"></div>
       </div>
     `;
 
@@ -32,26 +33,31 @@
     if (recents.length === 0) {
       list.innerHTML = `
         <div class="empty-state">
-          <div class="empty-glyph">∅</div>
+          <div class="empty-glyph">${ICONS.recent}</div>
           <p>Belum ada aplikasi yang dibuka.</p>
         </div>`;
       return;
     }
 
     recents.forEach(r => {
-      const card = document.createElement('button');
+      const [from, to] = ICON_BG[r.id] || ['#5DEFDF', '#2BB8AA'];
+      const card = document.createElement('div');
       card.className = 'recent-card';
-      card.style.width = '100%';
-      card.style.textAlign = 'left';
-      card.style.color = 'inherit';
       card.innerHTML = `
-        <div>
+        <div class="recent-card-icon" style="background:linear-gradient(155deg, ${from}, ${to})">${ICONS[r.id] || ''}</div>
+        <div class="recent-card-body">
           <div class="recent-card-name">${NAMES[r.id] || r.id}</div>
           <div class="recent-card-time">${timeAgo(r.time)}</div>
         </div>
-        <span style="color:var(--dim)">→</span>
+        <button class="recent-card-close" aria-label="Tutup">${ICONS.close}</button>
       `;
-      card.addEventListener('click', () => Router.navigate(r.id, r.params));
+      card.querySelector('.recent-card-body').addEventListener('click', () => Router.navigate(r.id, r.params));
+      card.querySelector('.recent-card-icon').addEventListener('click', () => Router.navigate(r.id, r.params));
+      card.querySelector('.recent-card-close').addEventListener('click', (e) => {
+        e.stopPropagation();
+        card.remove();
+        Router.forgetRecent(r.id);
+      });
       list.appendChild(card);
     });
   }
