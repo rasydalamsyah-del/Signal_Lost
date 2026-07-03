@@ -1,0 +1,49 @@
+# Changelog — Signal Lost
+
+Dokumen ini mencatat progres pengembangan, agar setiap perubahan (manual maupun
+lewat sesi Claude) jelas terlacak dan tidak ada yang tercecer.
+
+## [Unreleased] — Ditemukan saat audit 2026-07-04
+
+Catatan yang sebelumnya **tidak tercatat di mana pun**, ditemukan saat cross-check
+antara riwayat percakapan desain dan isi repo:
+
+- ⚠️ **Typing indicator DashChat belum ada.** Sesi desain sempat merencanakan animasi
+  "sedang mengetik" (bubble titik-titik berdenyut) sebelum balasan `them` muncul di
+  `apps/dashchat.js`. Fitur ini disebut sudah "Selesai" di catatan lama, tapi setelah
+  dicek langsung ke file, balasan masih muncul instan lewat `setTimeout` 700ms tanpa
+  indikator visual apa pun. **Belum dikerjakan — masuk backlog.**
+- Riwayat commit di GitHub semuanya berjenis "Add files via upload" (upload manual
+  dari browser GitHub, bukan `git commit` biasa), jadi tidak ada pesan commit granular
+  per fitur. Mulai sekarang perubahan akan dicatat manual di file ini supaya history
+  tetap jelas walau commit-nya digabung.
+
+## Riwayat commit (terverifikasi dari `git log`)
+
+| Commit | Tanggal | Isi |
+|---|---|---|
+| `73dafe4` | 2026-07-03 | Initial commit — starter project: struktur SPA (router, state, 10 app, 3 screen dasar), README |
+| `303c377` | 2026-07-04 | `apps/dashchat.js` — ganti glyph teks jadi ikon SVG, tombol kirim pakai `ICONS.send` |
+| `3cfc51e` | 2026-07-04 | `core/router.js` — tambah `forgetRecent()`, animasi transisi `screen-anim`/`screen-anim-pop` |
+| `a4d92ac` | 2026-07-04 | Rombak `screens/`: lock screen baru (swipe-to-unlock), boot animation arahkan ke lock (pakai `Router.replace` biar tidak numpuk history), home screen & status bar pakai SVG, recent apps jadi kartu |
+| `2bf6caa` | 2026-07-04 | `assets/icons.js` — library ikon SVG terpusat untuk status bar, nav bar, semua app icon |
+| `2a8d952` | 2026-07-04 | `index.html` & `style.css` — bingkai HP realistis, dynamic island, tombol samping, redesign penuh stylesheet |
+
+## Status fitur saat ini
+
+- ✅ Alur navigasi: Start → Boot → Lock (swipe unlock) → Home
+- ✅ Nav bar Back / Home / Recent Apps berfungsi
+- ✅ Dynamic island + status bar SVG (jam, sinyal, wifi, baterai)
+- ✅ 10 app punya kerangka fungsional (DashChat, Kontak, Snaply, Stremly, Gallery,
+  Storage, MyShop, Location, Kalender, Pengaturan)
+- ✅ Ikon SVG custom di semua app (bukan emoji/teks lagi)
+- ✅ Animasi transisi antar layar (system screen vs app-pop)
+- ❌ Typing indicator DashChat — **belum dikerjakan** (lihat Unreleased di atas)
+
+## Cara pakai file ini ke depan
+
+Setiap kali ada perubahan (baik lewat sesi ini atau upload manual), tambahkan entri
+baru di atas dengan format: tanggal, file yang diubah, dan ringkasan singkat kenapa.
+Ini memisahkan "apa yang benar-benar sudah jalan di kode" dari "apa yang cuma
+disebut selesai di obrolan" — supaya tidak ada gap seperti kasus typing indicator
+di atas.
