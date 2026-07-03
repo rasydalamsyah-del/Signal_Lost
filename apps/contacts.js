@@ -20,7 +20,7 @@
 
     const list = root.querySelector('#contact-list');
     if (s.contacts.length === 0) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-glyph">☰</div><p>Belum ada kontak.</p></div>`;
+      list.innerHTML = `<div class="empty-state"><div class="empty-glyph">${ICONS.contacts}</div><p>Belum ada kontak.</p></div>`;
       return;
     }
 

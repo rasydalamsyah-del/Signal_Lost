@@ -21,7 +21,7 @@
       const slotsEl = root.querySelector('#slots');
       const slots = AppState.listSlots();
       if (slots.length === 0) {
-        slotsEl.innerHTML = `<div class="empty-state"><div class="empty-glyph">⇊</div><p>Belum ada data tersimpan.</p></div>`;
+        slotsEl.innerHTML = `<div class="empty-state"><div class="empty-glyph">${ICONS.storage}</div><p>Belum ada data tersimpan.</p></div>`;
         return;
       }
       slotsEl.innerHTML = '';

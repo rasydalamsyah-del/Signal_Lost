@@ -19,7 +19,7 @@
 
     const grid = root.querySelector('#grid');
     if (s.gallery.length === 0) {
-      grid.innerHTML = `<div class="empty-state"><div class="empty-glyph">▧</div><p>Belum ada foto tersimpan.</p></div>`;
+      grid.innerHTML = `<div class="empty-state"><div class="empty-glyph">${ICONS.gallery}</div><p>Belum ada foto tersimpan.</p></div>`;
       return;
     }
 

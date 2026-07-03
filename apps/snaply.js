@@ -19,7 +19,7 @@
 
     const feed = root.querySelector('#feed');
     if (s.snaplyPosts.length === 0) {
-      feed.innerHTML = `<div class="empty-state"><div class="empty-glyph">◎</div><p>Feed masih sepi.</p></div>`;
+      feed.innerHTML = `<div class="empty-state"><div class="empty-glyph">${ICONS.snaply}</div><p>Feed masih sepi.</p></div>`;
       return;
     }
 

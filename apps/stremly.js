@@ -19,7 +19,7 @@
 
     const list = root.querySelector('#streams');
     if (s.stremlyStreams.length === 0) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-glyph">▶</div><p>Tidak ada siaran.</p></div>`;
+      list.innerHTML = `<div class="empty-state"><div class="empty-glyph">${ICONS.stremly}</div><p>Tidak ada siaran.</p></div>`;
       return;
     }
 

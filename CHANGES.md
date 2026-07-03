@@ -1,5 +1,33 @@
 # Changelog — Signal Lost
 
+## 2026-07-04 (lanjutan 2) — Perbaikan icon: bug warna hitam + upgrade ke ikon Lucide
+
+**Akar masalah "icon aplikasinya hitam doang":** ditemukan bug di `style.css`.
+`.app-icon-glyph` diset `color:var(--void)` (hampir hitam, `#0B0D10`) padahal
+seharusnya putih — sehingga SVG `fill="currentColor"` ikut jadi hitam pekat di
+atas tile gradient berwarna, jadi kelihatan seperti blob hitam polos, bukan
+ikon. Sudah diperbaiki jadi `color:#fff`.
+
+Sekalian upgrade seluruh set ikon:
+
+- **`assets/icons.js`** — 10 app-icon + ikon nav/status di-redraw ulang pakai
+  base shape dari **Lucide Icons** (lucide.dev, lisensi ISC — bebas dipakai
+  komersial, bukan logo brand bertrademark seperti Instagram/YouTube/dsb, jadi
+  aman dari sisi hak cipta). Gaya line-icon 1.8px stroke, konsisten di semua
+  app: DashChat → bubble chat, Kontak → dua figur orang, Snaply → kamera,
+  Stremly → clapperboard, Gallery → foto bertumpuk, Storage → save/disk,
+  MyShop → tas belanja, Location → pin peta, Kalender → kalender, Pengaturan →
+  gear.
+- **`style.css`** — kontainer ikon (`.app-icon-glyph`) sekarang render ikon
+  putih bersih + drop-shadow tipis di atas gradient tile, kontras jauh lebih
+  baik daripada sebelumnya.
+- **`apps/calendar.js`, `contacts.js`, `gallery.js`, `snaply.js`, `storage.js`,
+  `stremly.js`** — empty-state yang tadinya masih pakai karakter unicode
+  mentah (▦ ▶ ☰ ◎ ⇊ ▧, ukuran/warna tidak konsisten) diganti pakai ikon SVG
+  yang sama dengan ikon app-nya di home screen, biar seragam di semua tempat.
+- Semua file sudah lolos `node --check` (syntax valid).
+
+
 Dokumen ini mencatat progres pengembangan, agar setiap perubahan (manual maupun
 lewat sesi Claude) jelas terlacak dan tidak ada yang tercecer.
 

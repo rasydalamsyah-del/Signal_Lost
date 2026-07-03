@@ -20,7 +20,7 @@
 
     const list = root.querySelector('#cal-list');
     if (sorted.length === 0) {
-      list.innerHTML = `<div class="empty-state"><div class="empty-glyph">▦</div><p>Tidak ada jadwal.</p></div>`;
+      list.innerHTML = `<div class="empty-state"><div class="empty-glyph">${ICONS.calendar}</div><p>Tidak ada jadwal.</p></div>`;
       return;
     }
 
