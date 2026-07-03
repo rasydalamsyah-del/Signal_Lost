@@ -9,9 +9,10 @@ const Router = (function () {
   const root = () => document.getElementById('screen-root');
   const statusBar = () => document.getElementById('status-bar');
   const navBar = () => document.getElementById('nav-bar');
+  const island = () => document.getElementById('dynamic-island');
 
-  // views without status bar / nav bar chrome (start screen, boot animation)
-  const CHROMELESS = new Set(['start', 'boot']);
+  const CHROMELESS = new Set(['start', 'boot', 'lock']);
+  const SYSTEM_SCREENS = new Set(['start', 'boot', 'lock', 'home', 'recent']);
 
   let history = [];      // stack of { id, render }
   let recentApps = [];   // for the "Recent Apps" screen: { id, name, time }
@@ -26,6 +27,7 @@ const Router = (function () {
     const hide = CHROMELESS.has(id);
     statusBar().classList.toggle('hidden', hide);
     navBar().classList.toggle('hidden', hide);
+    island().classList.toggle('hidden', hide);
   }
 
   function renderCurrent() {
@@ -34,6 +36,8 @@ const Router = (function () {
     applyChrome(top.id);
     root().innerHTML = '';
     registry[top.id](root(), top.params || {});
+    const first = root().firstElementChild;
+    if (first) first.classList.add(SYSTEM_SCREENS.has(top.id) ? 'screen-anim' : 'screen-anim-pop');
     root().scrollTop = 0;
   }
 
@@ -71,10 +75,11 @@ const Router = (function () {
   }
 
   function getRecentApps() { return recentApps; }
+  function forgetRecent(id) { recentApps = recentApps.filter(a => a.id !== id); }
 
   function currentId() {
     return history.length ? history[history.length - 1].id : null;
   }
 
-  return { register, navigate, replace, back, home, getRecentApps, currentId };
+  return { register, navigate, replace, back, home, getRecentApps, forgetRecent, currentId };
 })();
