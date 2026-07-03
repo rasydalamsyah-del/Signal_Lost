@@ -13,46 +13,61 @@
   <!-- Ambient backdrop behind the phone (only visible on desktop preview) -->
   <div class="backdrop"></div>
 
-  <!-- ===== PHONE FRAME ===== -->
-  <!-- This is the only "screen" the browser ever draws. Everything below
-       is swapped in/out of #screen-root by core/router.js -->
-  <div id="phone" class="phone">
+  <!-- ===== PHONE FRAME (bezel + hardware buttons, cosmetic on desktop only) ===== -->
+  <div class="phone-frame" id="phone-frame">
+    <span class="side-btn side-btn-power" aria-hidden="true"></span>
+    <span class="side-btn side-btn-vol-up" aria-hidden="true"></span>
+    <span class="side-btn side-btn-vol-down" aria-hidden="true"></span>
+    <span class="side-btn side-btn-silent" aria-hidden="true"></span>
 
-    <!-- CRT / signal-noise overlay, purely cosmetic, sits above everything -->
-    <div class="scanlines" aria-hidden="true"></div>
-    <div class="glitch-flash" id="glitch-flash" aria-hidden="true"></div>
+    <!-- ===== SCREEN ===== -->
+    <div id="phone" class="phone">
 
-    <!-- Status bar: clock, network, battery. Hidden on Start/Boot screens. -->
-    <div id="status-bar" class="status-bar hidden">
-      <span id="status-clock" class="status-clock">00:00</span>
-      <div class="status-icons">
-        <span id="status-network" class="status-network" title="Sinyal">▂▄▆</span>
-        <span id="status-battery" class="status-battery" title="Baterai">
-          <span id="status-battery-fill" class="status-battery-fill"></span>
-        </span>
+      <!-- CRT / signal-noise overlay, purely cosmetic, sits above everything -->
+      <div class="scanlines" aria-hidden="true"></div>
+      <div class="glitch-flash" id="glitch-flash" aria-hidden="true"></div>
+
+      <!-- Dynamic island: overlaps the status bar row, hidden on chromeless screens -->
+      <div id="dynamic-island" class="dynamic-island hidden" aria-hidden="true"></div>
+
+      <!-- Status bar: clock, network, wifi, battery. Hidden on Start/Boot/Lock. -->
+      <div id="status-bar" class="status-bar hidden">
+        <span id="status-clock" class="status-clock">00:00</span>
+        <div class="status-icons">
+          <span id="status-network" class="status-icon-slot" title="Sinyal"></span>
+          <span id="status-wifi" class="status-icon-slot" title="Wi-Fi"></span>
+          <span id="status-battery" class="status-battery" title="Baterai">
+            <span id="status-battery-fill" class="status-battery-fill"></span>
+          </span>
+        </div>
       </div>
+
+      <!-- All screen/app content is injected here by the router -->
+      <main id="screen-root" class="screen-root"></main>
+
+      <!-- Bottom navigation: Back / Home / Recent. Hidden on Start/Boot/Lock. -->
+      <nav id="nav-bar" class="nav-bar hidden">
+        <button id="nav-back" class="nav-btn" aria-label="Kembali">
+          <span class="nav-btn-ripple"></span>
+          <span class="nav-btn-icon"></span>
+        </button>
+        <button id="nav-home" class="nav-btn nav-btn-home" aria-label="Beranda">
+          <span class="nav-btn-ripple"></span>
+          <span class="nav-btn-icon"></span>
+        </button>
+        <button id="nav-recent" class="nav-btn" aria-label="Aplikasi terbaru">
+          <span class="nav-btn-ripple"></span>
+          <span class="nav-btn-icon"></span>
+        </button>
+      </nav>
+
     </div>
-
-    <!-- All screen/app content is injected here by the router -->
-    <main id="screen-root" class="screen-root"></main>
-
-    <!-- Bottom navigation: Back / Home / Recent. Hidden on Start/Boot screens. -->
-    <nav id="nav-bar" class="nav-bar hidden">
-      <button id="nav-back" class="nav-btn" aria-label="Kembali">
-        <svg viewBox="0 0 24 24"><path d="M15 4L7 12L15 20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      </button>
-      <button id="nav-home" class="nav-btn nav-btn-home" aria-label="Beranda">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-      </button>
-      <button id="nav-recent" class="nav-btn" aria-label="Aplikasi terbaru">
-        <svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
-      </button>
-    </nav>
-
+    <!-- ===== END SCREEN ===== -->
   </div>
   <!-- ===== END PHONE FRAME ===== -->
 
-  <!-- Load order matters: state/router first, then screens, then apps, then main -->
+  <!-- Load order matters: icons/state/router first, then screens, then apps, then main -->
+  <script src="assets/icons.js"></script>
   <script src="core/state.js"></script>
   <script src="core/router.js"></script>
 
@@ -60,6 +75,7 @@
   <script src="screens/statusBar.js"></script>
   <script src="screens/startScreen.js"></script>
   <script src="screens/bootAnimation.js"></script>
+  <script src="screens/lockScreen.js"></script>
   <script src="screens/homeScreen.js"></script>
   <script src="screens/recentApps.js"></script>
 
