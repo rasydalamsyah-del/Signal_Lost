@@ -68,10 +68,16 @@
     `;
 
     const msgsEl = root.querySelector('#chat-messages');
+    let isTyping = false; // drives the "sedang mengetik" bubble below
+
     function paint() {
-      msgsEl.innerHTML = chat.messages.map(m => `
+      const bubbles = chat.messages.map(m => `
         <div class="bubble ${m.from === 'me' ? 'bubble-me' : 'bubble-them'}">${m.text}</div>
       `).join('');
+      const typingBubble = isTyping
+        ? `<div class="typing-dots" aria-label="sedang mengetik"><span></span><span></span><span></span></div>`
+        : '';
+      msgsEl.innerHTML = bubbles + typingBubble;
       root.querySelector('.app-body').scrollTop = msgsEl.scrollHeight;
     }
     paint();
@@ -85,23 +91,29 @@
       input.value = '';
       paint();
       AppState.set('flags.lastPlayerMessage', text); // in case story logic reads it
-      handleReply(chatId);
+      handleReply();
+    }
+
+    // ---- placeholder reply logic: replace with your branching story ----
+    // Shows a "typing..." bubble first, then swaps it for the real reply —
+    // matches the real DashChat feel instead of the message popping in instantly.
+    function handleReply() {
+      isTyping = true;
+      paint();
+
+      const typingDuration = 900 + Math.random() * 700; // small variance so it doesn't feel robotic
+      setTimeout(() => {
+        isTyping = false;
+        const time = new Date().toTimeString().slice(0, 5);
+        chat.messages.push({ from: 'them', text: '...', time });
+        if (Router.currentId() === 'dashchat') paint();
+      }, typingDuration);
     }
 
     root.querySelector('#chat-send').addEventListener('click', send);
     root.querySelector('#chat-input').addEventListener('keydown', e => {
       if (e.key === 'Enter') send();
     });
-  }
-
-  // ---- placeholder reply logic: replace with your branching story ----
-  function handleReply(chatId) {
-    const chat = AppState.get().chats[chatId];
-    setTimeout(() => {
-      const time = new Date().toTimeString().slice(0, 5);
-      chat.messages.push({ from: 'them', text: '...', time });
-      if (Router.currentId() === 'dashchat') renderThread(document.getElementById('screen-root'), chatId);
-    }, 700);
   }
 
   Router.register('dashchat', (root, params) => {
