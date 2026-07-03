@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Signal Lost</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Ambient backdrop behind the phone (only visible on desktop preview) -->
+  <div class="backdrop"></div>
+
+  <!-- ===== PHONE FRAME ===== -->
+  <!-- This is the only "screen" the browser ever draws. Everything below
+       is swapped in/out of #screen-root by core/router.js -->
+  <div id="phone" class="phone">
+
+    <!-- CRT / signal-noise overlay, purely cosmetic, sits above everything -->
+    <div class="scanlines" aria-hidden="true"></div>
+    <div class="glitch-flash" id="glitch-flash" aria-hidden="true"></div>
+
+    <!-- Status bar: clock, network, battery. Hidden on Start/Boot screens. -->
+    <div id="status-bar" class="status-bar hidden">
+      <span id="status-clock" class="status-clock">00:00</span>
+      <div class="status-icons">
+        <span id="status-network" class="status-network" title="Sinyal">▂▄▆</span>
+        <span id="status-battery" class="status-battery" title="Baterai">
+          <span id="status-battery-fill" class="status-battery-fill"></span>
+        </span>
+      </div>
+    </div>
+
+    <!-- All screen/app content is injected here by the router -->
+    <main id="screen-root" class="screen-root"></main>
+
+    <!-- Bottom navigation: Back / Home / Recent. Hidden on Start/Boot screens. -->
+    <nav id="nav-bar" class="nav-bar hidden">
+      <button id="nav-back" class="nav-btn" aria-label="Kembali">
+        <svg viewBox="0 0 24 24"><path d="M15 4L7 12L15 20" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <button id="nav-home" class="nav-btn nav-btn-home" aria-label="Beranda">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </button>
+      <button id="nav-recent" class="nav-btn" aria-label="Aplikasi terbaru">
+        <svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+      </button>
+    </nav>
+
+  </div>
+  <!-- ===== END PHONE FRAME ===== -->
+
+  <!-- Load order matters: state/router first, then screens, then apps, then main -->
+  <script src="core/state.js"></script>
+  <script src="core/router.js"></script>
+
+  <script src="screens/navBar.js"></script>
+  <script src="screens/statusBar.js"></script>
+  <script src="screens/startScreen.js"></script>
+  <script src="screens/bootAnimation.js"></script>
+  <script src="screens/homeScreen.js"></script>
+  <script src="screens/recentApps.js"></script>
+
+  <script src="apps/dashchat.js"></script>
+  <script src="apps/contacts.js"></script>
+  <script src="apps/snaply.js"></script>
+  <script src="apps/stremly.js"></script>
+  <script src="apps/gallery.js"></script>
+  <script src="apps/storage.js"></script>
+  <script src="apps/myshop.js"></script>
+  <script src="apps/location.js"></script>
+  <script src="apps/calendar.js"></script>
+  <script src="apps/settings.js"></script>
+
+  <script src="main.js"></script>
+</body>
+</html>
