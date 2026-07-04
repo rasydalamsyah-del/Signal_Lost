@@ -1,5 +1,27 @@
 # Changelog — Signal Lost
 
+## 2026-07-04 (lanjutan 7) — Investigasi notifikasi "tidak bisa diklik"
+
+Ditest 3 lapis pakai jsdom (headless browser) buat mastiin ini bukan bug
+kode: computed CSS `pointer-events` beneran berubah `none` → `auto` pas
+class `.toast-clickable` ditambah, dan event listener klik beneran
+terpasang & terpanggil. Mekanismenya sendiri **sudah benar dari awal**.
+
+Penyebab paling mungkin: banner cuma tampil ±3.8 detik dan belum ada
+tanda visual yang bilang itu bisa diketuk — jadi kemungkinan besar hilang
+duluan sebelum sempat ditekan, atau pemain gak sadar itu interaktif.
+Diperbaiki di `core/notify.js`:
+
+- Notifikasi yang punya `onClick` sekarang bertahan 6 detik (bukan 3.8),
+  dan timer auto-hide-nya **berhenti begitu disentuh/ditekan**
+  (`pointerdown`) — jadi gak bakal hilang persis pas mau diklik.
+- Ditambah chevron kecil (`›`) di kanan banner, cuma muncul kalau
+  notifikasinya bisa diklik (`assets/icons.js`: ikon baru `chevronRight`,
+  `style.css`: `.toast-chevron`) — jadi jelas keliatan itu bisa ditekan.
+- Ditest ulang lewat jsdom simulasi pointerdown+click, mekanismenya jalan
+  benar sekarang.
+
+
 ## 2026-07-04 (lanjutan 6) — Bersihkan sisa referensi "sistem/fitur" di dialog Asisten
 
 Setelah lanjutan-5 (fokus ke dialog pasangan), audit ulang nemuin sisa

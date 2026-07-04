@@ -21,7 +21,8 @@ const Notify = (function () {
       banner: document.getElementById('toast-banner'),
       icon: document.getElementById('toast-icon'),
       title: document.getElementById('toast-title'),
-      sub: document.getElementById('toast-sub')
+      sub: document.getElementById('toast-sub'),
+      chevron: document.getElementById('toast-chevron')
     };
   }
 
@@ -42,9 +43,12 @@ const Notify = (function () {
       hide();
       fn();
     });
+    // if the player's finger/cursor is on the banner, don't let it vanish
+    // out from under them mid-tap
+    banner.addEventListener('pointerdown', () => clearTimeout(hideTimer));
   }
 
-  function show({ title = '', body = '', icon = null, durationMs = 3800, onClick = null } = {}) {
+  function show({ title = '', body = '', icon = null, durationMs = null, onClick = null } = {}) {
     const { banner, icon: iconEl, title: titleEl, sub: subEl } = els();
     if (!banner) return;
     bindClickOnce(banner);
@@ -55,6 +59,11 @@ const Notify = (function () {
 
     currentOnClick = onClick;
     banner.classList.toggle('toast-clickable', !!onClick);
+    els().chevron.innerHTML = onClick ? (window.ICONS ? ICONS.chevronRight : '') : '';
+
+    // clickable banners get more time on screen — they need to survive
+    // long enough for the player to actually notice and tap them.
+    const duration = durationMs != null ? durationMs : (onClick ? 6000 : 3800);
 
     clearTimeout(hideTimer);
     banner.classList.remove('hidden');
@@ -62,7 +71,7 @@ const Notify = (function () {
     // instead of snapping in when toggled on the same frame.
     requestAnimationFrame(() => banner.classList.add('show'));
 
-    hideTimer = setTimeout(hide, durationMs);
+    hideTimer = setTimeout(hide, duration);
   }
 
   return { show };

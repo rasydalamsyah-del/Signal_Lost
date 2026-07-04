@@ -145,6 +145,9 @@ button{ font-family:inherit; cursor:pointer; }
 .toast-body{ min-width:0; }
 .toast-title{ font-size:12.5px; font-weight:700; }
 .toast-sub{ font-size:11.5px; color:var(--dim); margin-top:1px; max-width:230px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.toast-chevron{ width:16px; height:16px; flex:0 0 auto; color:var(--dim); display:flex; opacity:0; transition:opacity .15s; }
+.toast-chevron svg{ width:100%; height:100%; }
+.toast-banner.toast-clickable .toast-chevron{ opacity:1; }
 
 /* ============================================================
    STATUS BAR
