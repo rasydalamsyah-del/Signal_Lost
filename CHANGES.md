@@ -1,5 +1,37 @@
 # Changelog — Signal Lost
 
+## 2026-07-04 (lanjutan 4) — Nada dialog, skip pertanyaan yang sudah terjawab, fix bug badge
+
+Masukan dari testing manual, tiga perbaikan nyata:
+
+- **Nada dialog kaku/kayak AI** — seluruh naskah Asisten & Pasangan ditulis
+  ulang total di `core/story.js`, dari kalimat formal/menjelaskan-sistem
+  ("Cara kerjanya sederhana...") jadi gaya chat casual sehari-hari ("eh,
+  halo. ini hp baru kamu kan?"). Penjelasan mekanisme game dipangkas jadi
+  1 baris singkat yang dibungkus natural, bukan kuliah UI.
+- **Bug: Asisten tetap nanya nama yang udah diisi di Pengaturan** —
+  ditambah dua lapis pengecekan di `apps/dashchat.js` (`enterNode`):
+  1. Node gerbang `a_profile_gate` (baru, di `core/story.js`) — kalau
+     kedelapan field profil sudah terisi semua sebelum chat dibuka, seluruh
+     sesi tanya-nama di-skip sekaligus, langsung ke satu baris pengakuan
+     ("kelihatannya kamu udah isi semua data itu") lalu lanjut ke demo pilihan.
+  2. Tiap node tanya-nama individual juga skip sendiri-sendiri kalau
+     field itu spesifik sudah terisi (jadi kalau cuma sebagian yang diisi
+     duluan, cuma yang kosong yang ditanya). Dites di Node dengan 2 skenario
+     (semua terisi / sebagian terisi) — keduanya jalan sesuai rancangan.
+- **Bug: titik notifikasi (badge) gak sinkron, gak pernah hilang** — akar
+  masalahnya di `screens/homeScreen.js` dan `screens/lockScreen.js`: logic
+  lama menghitung "belum dibaca" kalau `last.from === 'them'`, padahal
+  hampir semua percakapan otomatis berakhir dengan pesan dari lawan chat
+  (termasuk cliffhanger yang emang sengaja gitu) — jadi badge stuck nyala
+  selamanya walau sudah dibaca semua. Diperbaiki: status "baru/belum
+  dibuka" sekarang murni dari `contact.isNew`, yang beneran jadi `false`
+  pas pertama kali chat itu dibuka pemain — konsisten dengan cara badge
+  Kontak sudah bekerja dari awal.
+- Semua file lolos `node --check`; skip-logic dites headless di Node
+  dengan 3 skenario (normal, semua profil pre-filled, sebagian pre-filled).
+
+
 ## 2026-07-04 (lanjutan 3) — Story engine, profil nama dinamis, notifikasi global
 
 Fitur besar: DashChat sekarang jadi mesin cerita bercabang sungguhan, bukan

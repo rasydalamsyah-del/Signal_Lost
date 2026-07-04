@@ -22,6 +22,14 @@
      effects: object[]    — run once, right after `lines` finish typing,
                            before choices/input/next are evaluated.
                            See runEffects() below for supported types.
+     skipTo:  { when:'allFilled', paths:[...], next }
+                           — checked by apps/dashchat.js BEFORE this node's
+                           lines are shown. If every dot-path in `paths`
+                           already has a value, jump straight to `next`
+                           instead (used so the assistant doesn't re-ask
+                           for names the player already filled in
+                           Pengaturan). Individual `input` nodes also
+                           silently skip themselves the same way, per field.
 
    A node with none of input/choices/next is a dead end — "no new
    content yet", which is exactly where the current partner script
@@ -43,133 +51,130 @@ const Story = (function () {
 
       a_start: {
         lines: [
-          'Halo.',
-          'Sebelum kamu tanya-tanya duluan: ponsel ini baru, tapi sinyalnya bukan sinyal ponsel baru pada umumnya.',
-          'Aku di sini buat bantu kamu paham cara pakainya dulu, sebelum semuanya jalan sendiri.'
+          'eh, halo.',
+          'ini hp baru kamu kan? aku yang bantu setting-in kemarin.',
+          'ada beberapa hal yang mau aku pastiin dulu sebelum kamu mulai pake ini.'
         ],
         next: 'a_mech_intro'
       },
 
       a_mech_intro: {
         lines: [
-          'Cara kerjanya sederhana. Kalau aku nanya sesuatu yang butuh jawaban bebas, kotak tulis di bawah bakal aktif — kamu ketik sendiri jawabannya.',
-          'Kalau aku kasih beberapa opsi jawaban, opsi itu muncul sebagai tombol di atas kotak tulis. Tinggal ketuk salah satu.',
-          'Selain itu, kotak tulisnya nonaktif. Ini bukan obrolan bebas — lebih ke... percakapan yang nunggu gilirannya.'
+          'oh iya — kalo aku nanya sesuatu, biasanya kamu tinggal jawab pake kata-kata sendiri di kotak bawah.',
+          'tapi kalo aku kasih beberapa pilihan jawaban, tinggal pencet salah satu aja, gak usah diketik.'
         ],
+        next: 'a_profile_gate'
+      },
+
+      // gate: kalau player udah isi semua nama di Pengaturan sebelum buka chat
+      // ini, skip seluruh sesi tanya-nama dan langsung ke demo pilihan.
+      a_profile_gate: {
+        lines: [],
+        skipTo: {
+          when: 'allFilled',
+          paths: [
+            'profile.user.name', 'profile.partner.name',
+            'profile.userFriend.name', 'profile.partnerFriend.name',
+            'profile.userMom.name', 'profile.userDad.name',
+            'profile.partnerMom.name', 'profile.partnerDad.name'
+          ],
+          next: 'a_profile_prefilled'
+        },
         next: 'a_ask_user_name'
       },
-
-      a_ask_user_name: {
-        lines: ['Kita mulai dari yang paling dasar dulu.'],
-        input: { placeholder: 'Ketik nama kamu...', savesTo: 'profile.user.name', next: 'a_ack_user_name' }
-      },
-      a_ack_user_name: {
-        lines: ['{{user}}. Oke, dicatat.'],
-        next: 'a_ask_partner_name'
-      },
-
-      a_ask_partner_name: {
+      a_profile_prefilled: {
         lines: [
-          'Sekarang yang agak personal.',
-          'Siapa nama orang yang paling penting buat kamu sekarang ini?'
+          'eh btw, kelihatannya kamu udah isi semua data itu duluan di Pengaturan.',
+          'oke, aku pake yang udah ada aja kalau gitu.'
         ],
-        input: { placeholder: 'Nama dia...', savesTo: 'profile.partner.name', next: 'a_ack_partner_name' }
-      },
-      a_ack_partner_name: {
-        lines: ['{{partner}}. Baik. Ingat-ingat nama itu — nanti kepakai.'],
-        next: 'a_ask_user_friend'
-      },
-
-      a_ask_user_friend: {
-        lines: ['Satu lagi soal kamu sendiri.', 'Siapa sahabat paling dekat kamu?'],
-        input: { placeholder: 'Nama sahabatmu...', savesTo: 'profile.userFriend.name', next: 'a_ack_user_friend' }
-      },
-      a_ack_user_friend: {
-        lines: ['{{userFriend}}. Oke.'],
-        next: 'a_ask_partner_friend'
-      },
-
-      a_ask_partner_friend: {
-        lines: ['Kalau sahabat dekat {{partner}}, siapa namanya?'],
-        input: { placeholder: 'Nama sahabat pasanganmu...', savesTo: 'profile.partnerFriend.name', next: 'a_ack_partner_friend' }
-      },
-      a_ack_partner_friend: {
-        lines: ['{{partnerFriend}}. Dicatat juga.'],
-        next: 'a_ask_user_mom'
-      },
-
-      a_ask_user_mom: {
-        lines: ['Sekarang soal keluarga.', 'Nama ibu kamu?'],
-        input: { placeholder: 'Nama ibu kamu...', savesTo: 'profile.userMom.name', next: 'a_ack_user_mom' }
-      },
-      a_ack_user_mom: {
-        lines: ['Baik, {{userMom}}.'],
-        next: 'a_ask_user_dad'
-      },
-
-      a_ask_user_dad: {
-        lines: ['Nama ayah kamu?'],
-        input: { placeholder: 'Nama ayah kamu...', savesTo: 'profile.userDad.name', next: 'a_ack_user_dad' }
-      },
-      a_ack_user_dad: {
-        lines: ['{{userDad}}. Sip.'],
-        next: 'a_ask_partner_mom'
-      },
-
-      a_ask_partner_mom: {
-        lines: ['Sekarang keluarga {{partner}}.', 'Nama ibunya?'],
-        input: { placeholder: 'Nama ibu pasanganmu...', savesTo: 'profile.partnerMom.name', next: 'a_ack_partner_mom' }
-      },
-      a_ack_partner_mom: {
-        lines: ['{{partnerMom}}. Oke.'],
-        next: 'a_ask_partner_dad'
-      },
-
-      a_ask_partner_dad: {
-        lines: ['Terakhir. Nama ayah {{partner}}?'],
-        input: { placeholder: 'Nama ayah pasanganmu...', savesTo: 'profile.partnerDad.name', next: 'a_ack_partner_dad' }
-      },
-      a_ack_partner_dad: {
-        lines: ['{{partnerDad}}. Semua nama penting udah aku catat.'],
         next: 'a_demo_choice'
       },
+
+      // setiap node di bawah ini otomatis di-skip sendiri-sendiri kalau
+      // field-nya udah keisi (lihat pengecekan di apps/dashchat.js)
+      a_ask_user_name: {
+        lines: ['btw aku lupa nanya, nama kamu siapa?'],
+        input: { placeholder: 'Ketik nama kamu...', savesTo: 'profile.user.name', next: 'a_ack_user_name' }
+      },
+      a_ack_user_name: { lines: ['oh, {{user}}. oke.'], next: 'a_ask_partner_name' },
+
+      a_ask_partner_name: {
+        lines: ['terus... orang yang paling penting buat kamu sekarang ini, siapa namanya?'],
+        input: { placeholder: 'Nama dia...', savesTo: 'profile.partner.name', next: 'a_ack_partner_name' }
+      },
+      a_ack_partner_name: { lines: ['{{partner}}, ya udah. aku inget itu.'], next: 'a_ask_user_friend' },
+
+      a_ask_user_friend: {
+        lines: ['sahabat paling deket kamu siapa?'],
+        input: { placeholder: 'Nama sahabatmu...', savesTo: 'profile.userFriend.name', next: 'a_ack_user_friend' }
+      },
+      a_ack_user_friend: { lines: ['{{userFriend}}, noted.'], next: 'a_ask_partner_friend' },
+
+      a_ask_partner_friend: {
+        lines: ['kalo sahabat deketnya {{partner}}, siapa?'],
+        input: { placeholder: 'Nama sahabat pasanganmu...', savesTo: 'profile.partnerFriend.name', next: 'a_ack_partner_friend' }
+      },
+      a_ack_partner_friend: { lines: ['{{partnerFriend}}. oke, dicatat.'], next: 'a_ask_user_mom' },
+
+      a_ask_user_mom: {
+        lines: ['nama ibu kamu?'],
+        input: { placeholder: 'Nama ibu kamu...', savesTo: 'profile.userMom.name', next: 'a_ack_user_mom' }
+      },
+      a_ack_user_mom: { lines: ['{{userMom}}, oke.'], next: 'a_ask_user_dad' },
+
+      a_ask_user_dad: {
+        lines: ['nama ayah kamu?'],
+        input: { placeholder: 'Nama ayah kamu...', savesTo: 'profile.userDad.name', next: 'a_ack_user_dad' }
+      },
+      a_ack_user_dad: { lines: ['{{userDad}}. sip.'], next: 'a_ask_partner_mom' },
+
+      a_ask_partner_mom: {
+        lines: ['nama ibunya {{partner}}?'],
+        input: { placeholder: 'Nama ibu pasanganmu...', savesTo: 'profile.partnerMom.name', next: 'a_ack_partner_mom' }
+      },
+      a_ack_partner_mom: { lines: ['{{partnerMom}}, oke.'], next: 'a_ask_partner_dad' },
+
+      a_ask_partner_dad: {
+        lines: ['terakhir — ayahnya {{partner}}, siapa?'],
+        input: { placeholder: 'Nama ayah pasanganmu...', savesTo: 'profile.partnerDad.name', next: 'a_ack_partner_dad' }
+      },
+      a_ack_partner_dad: { lines: ['{{partnerDad}}. oke, semuanya udah aku catet.'], next: 'a_demo_choice' },
 
       // ---- real branching demo: three genuinely different replies ----
       a_demo_choice: {
         lines: [
-          'Sekarang coba cara milih opsi — ini cuma latihan, jawab apa aja yang paling kerasa benar.',
-          'Gimana perasaan kamu soal ponsel baru ini?'
+          'btw coba jawab ini — cuma buat mastiin fiturnya jalan beneran.',
+          'gimana perasaan kamu soal hp baru ini?'
         ],
         choices: [
-          { label: 'Biasa aja, cuma ponsel.', next: 'a_after_casual' },
-          { label: 'Agak was-was, jujur.', next: 'a_after_wary' },
+          { label: 'Biasa aja sih.', next: 'a_after_casual' },
+          { label: 'Jujur, agak was-was.', next: 'a_after_wary' },
           { label: 'Penasaran — kenapa sinyalnya aneh?', next: 'a_after_curious' }
         ]
       },
-      a_after_casual: { lines: ['Santai. Semoga tetap begitu terus.'], next: 'a_single_note' },
-      a_after_wary:   { lines: ['Wajar kok. Aku juga, sebenarnya.'], next: 'a_single_note' },
-      a_after_curious:{ lines: ['Jujur, aku juga belum punya jawaban pasti soal itu.'], next: 'a_single_note' },
+      a_after_casual: { lines: ['santai. semoga tetep gitu terus ya.'], next: 'a_single_note' },
+      a_after_wary:   { lines: ['wajar kok. aku juga sebenernya.'], next: 'a_single_note' },
+      a_after_curious:{ lines: ['jujur, aku juga belom nemu jawabannya.'], next: 'a_single_note' },
 
       a_single_note: {
         lines: [
-          'Satu hal lagi sebelum aku pergi.',
-          'Kadang nanti cuma ada satu pilihan yang muncul di obrolan — itu normal, bukan bug.',
-          'Kalau kamu males mengetuk setiap kali itu terjadi, nyalain "Lanjut Otomatis" di Pengaturan. Nanti otomatis lanjut sendiri.'
+          'oh iya, satu lagi — kadang nanti cuma ada satu pilihan doang yang muncul di obrolan.',
+          'itu normal, bukan error. kalo males mencet terus, nyalain "Lanjut Otomatis" di Pengaturan aja.'
         ],
         next: 'a_single_demo'
       },
       a_single_demo: {
-        lines: ['Contohnya kayak gini.'],
-        choices: [ { label: 'Oke, aku ngerti.', next: 'a_farewell' } ]
+        lines: ['contohnya kayak gini nih.'],
+        choices: [ { label: 'Oke, ngerti.', next: 'a_farewell' } ]
       },
 
       // ---- handoff: assistant disappears, partner contact appears ----
       a_farewell: {
         lines: [
-          'Kurasa itu semua yang perlu kamu tahu buat sekarang, {{user}}.',
-          'Setelah ini aku bakal diam. Percakapan kita akan hilang dari daftar kontak — memang begitu cara ponsel ini kerja.',
-          'Tapi jangan kaget kalau nanti ada kontak baru muncul.',
-          'Hati-hati sama sinyalnya.'
+          'oke {{user}}, kayaknya itu doang yang perlu kamu tau buat sekarang.',
+          'aku bakal ilang dari kontak setelah ini — emang gitu sistemnya, jangan kaget.',
+          'tapi bentar lagi bakal ada nomor baru yang masuk.',
+          'hati-hati aja sama sinyal di hp ini.'
         ],
         effects: [
           { type: 'endThread', threadId: 'assistant' },
@@ -189,41 +194,41 @@ const Story = (function () {
     // ---------------------------------------------------------
     partner: {
       p_start: {
-        lines: ['...', 'Kamu masih bisa baca ini?', 'Aku nggak tau harus mulai dari mana.'],
+        lines: ['...', 'kamu masih baca ini kan?', 'gatau harus mulai darimana...'],
         next: 'p_choice1'
       },
       p_choice1: {
-        lines: ['Ini aku sebenarnya. Aku tau kedengarannya aneh kalau nomor ini keliatan asing buatmu.'],
+        lines: ['ini beneran aku. tau kedengerannya aneh kalo nomor ini asing buat kamu.'],
         choices: [
           { label: 'Siapa ini?', next: 'p_branch_who' },
           { label: 'Kamu kenal aku?', next: 'p_branch_know' },
-          { label: '(Diam, tunggu dia lanjut bicara)', next: 'p_branch_silent' }
+          { label: '(diem aja, biar dia lanjut ngomong)', next: 'p_branch_silent' }
         ]
       },
-      p_branch_who:   { lines: ['Pertanyaan yang wajar.', 'Tapi aku belum bisa jawab itu sekarang. Belum waktunya.'], next: 'p_common1' },
-      p_branch_know:  { lines: ['Kenal? Lebih dari itu, kurasa.', 'Tapi ponsel ini nggak ngizinin aku bilang lebih jauh dulu.'], next: 'p_common1' },
-      p_branch_silent:{ lines: ['...', 'Kamu diam. Oke.', 'Aku ngerti kalau ini kedengarannya aneh.'], next: 'p_common1' },
+      p_branch_who:   { lines: ['pertanyaan yang wajar sih.', 'tapi belom bisa jawab itu sekarang. belom waktunya.'], next: 'p_common1' },
+      p_branch_know:  { lines: ['kenal? lebih dari itu kayaknya.', 'tapi hp ini kayak gamau ngizinin aku cerita lebih jauh dulu.'], next: 'p_common1' },
+      p_branch_silent:{ lines: ['...', 'kamu diem. oke.', 'aku ngerti sih kalo ini kedengeran aneh.'], next: 'p_common1' },
 
       p_common1: {
-        lines: ['Yang penting, aku masih di sini.', 'Aku akan cerita pelan-pelan, kalau sinyalnya izinin.'],
+        lines: ['yang penting aku masih di sini.', 'aku certain pelan-pelan deh, kalo sinyalnya ngizinin.'],
         next: 'p_choice2'
       },
       p_choice2: {
-        lines: ['Kamu percaya aku?'],
+        lines: ['kamu percaya gak sama aku?'],
         choices: [
-          { label: 'Belum tahu.', next: 'p_branch_unsure' },
+          { label: 'Belom tau.', next: 'p_branch_unsure' },
           { label: 'Coba aja dulu.', next: 'p_branch_trust' }
         ]
       },
-      p_branch_unsure:{ lines: ['Jujur, aku juga nggak yakin harus percaya diriku sendiri sekarang.'], next: 'p_reveal_setup' },
-      p_branch_trust: { lines: ['Itu... lebih dari yang aku harap.'], next: 'p_reveal_setup' },
+      p_branch_unsure:{ lines: ['jujur, aku juga gak yakin harus percaya diri sendiri sekarang.'], next: 'p_reveal_setup' },
+      p_branch_trust: { lines: ['itu... lebih dari yang aku harepin.'], next: 'p_reveal_setup' },
 
       p_reveal_setup: {
-        lines: ['Ada satu hal yang pasti nggak berubah, walau sinyal ini kacau.', 'Nama panggilan yang cuma kamu yang tau.'],
-        choices: [ { label: 'Ucapin.', next: 'p_reveal' } ]
+        lines: ['ada satu hal yang pasti gak berubah, walau sinyal ini kacau.', 'nama panggilan yang cuma kamu yang tau.'],
+        choices: [ { label: 'Sebutin.', next: 'p_reveal' } ]
       },
       p_reveal: {
-        lines: ['Ini aku, {{partner}}.'],
+        lines: ['ini aku, {{partner}}.'],
         effects: [
           { type: 'renameThread', threadId: 'partner', name: '{{partner}}' },
           { type: 'setFlag', flag: 'partnerRevealed', value: true }
@@ -231,12 +236,12 @@ const Story = (function () {
         next: 'p_after_reveal'
       },
       p_after_reveal: {
-        lines: ['Maaf soal semua misteri barusan.', 'Aku... nggak tau harus mulai dari mana buat cerita apa yang sebenarnya terjadi.'],
+        lines: ['maaf ya soal misteri barusan.', 'aku... gatau harus mulai darimana buat cerita apa yang sebenernya kejadian.'],
         next: 'p_hold'
       },
       p_hold: {
         // dead end on purpose — cliffhanger, next content continues here
-        lines: ['Sinyalnya mulai nggak stabil lagi di sisiku.', 'Aku hubungin lagi kalau udah bisa...']
+        lines: ['sinyalnya mulai gak stabil lagi di sisi aku.', 'aku hubungin lagi kalo udah bisa...']
       }
     }
   };

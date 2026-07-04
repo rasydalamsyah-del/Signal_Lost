@@ -160,6 +160,27 @@
       const node = Story.getNode(chatId, nodeId);
       if (!node) { setInputEnabled(false); choicesEl.innerHTML = ''; return; } // unwritten content yet
 
+      // conditional branch used for "skip the whole name-collection block if
+      // the player already filled every field in Pengaturan" — see a_profile_gate
+      if (node.skipTo && !resuming) {
+        const paths = node.skipTo.paths || [];
+        const allFilled = paths.length > 0 && paths.every(p => !!AppState.getPath(p));
+        if (node.skipTo.when === 'allFilled' && allFilled) {
+          enterNode(node.skipTo.next);
+          return;
+        }
+      }
+
+      // don't re-ask a question whose answer is already known (e.g. the
+      // player filled this exact field in Pengaturan before opening the chat)
+      if (node.input && node.input.savesTo && !resuming) {
+        const existing = AppState.getPath(node.input.savesTo);
+        if (existing) {
+          enterNode(node.input.next);
+          return;
+        }
+      }
+
       let ts = Story.threadState(chatId);
       if (!resuming || !ts || ts.nodeId !== nodeId) {
         Story.setNode(chatId, nodeId);

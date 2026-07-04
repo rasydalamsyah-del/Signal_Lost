@@ -29,14 +29,11 @@
       return n > 0 ? n : null;
     }
     if (app.id === 'dashchat') {
-      let n = 0;
-      Object.keys(s.chats).forEach(id => {
-        const chat = s.chats[id];
-        const contact = s.contacts.find(c => c.id === id);
-        const last = chat.messages[chat.messages.length - 1];
-        const unread = (contact && contact.isNew) || (last && last.from === 'them');
-        if (unread) n++;
-      });
+      // a chat is "unread" only if the player has never opened it yet —
+      // NOT based on who sent the last message (a finished conversation
+      // almost always ends with a line from the other person, so that
+      // would keep the badge stuck on forever after the story is done).
+      const n = s.contacts.filter(c => c.isNew && s.chats[c.id]).length;
       return n > 0 ? n : null;
     }
     return null;

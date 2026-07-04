@@ -126,6 +126,11 @@ const AppState = (function () {
       });
     },
 
+    // generic dot-path getter, e.g. AppState.getPath('profile.user.name')
+    getPath(path) {
+      return path.split('.').reduce((o, k) => (o == null ? o : o[k]), data);
+    },
+
     // ---- persistence ----
     save(slot = 'autosave') {
       const record = { data, savedAt: new Date().toISOString() };
