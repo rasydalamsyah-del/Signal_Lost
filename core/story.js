@@ -60,8 +60,8 @@ const Story = (function () {
 
       a_mech_intro: {
         lines: [
-          'oh iya — kalo aku nanya sesuatu, biasanya kamu tinggal jawab pake kata-kata sendiri di kotak bawah.',
-          'tapi kalo aku kasih beberapa pilihan jawaban, tinggal pencet salah satu aja, gak usah diketik.'
+          'kalo aku nanti nanya sesuatu, jawab aja pake kata-kata sendiri, santai kayak biasa.',
+          'tapi kalo aku kasih beberapa pilihan jawaban, pilih aja salah satu, gak usah diketik ulang.'
         ],
         next: 'a_profile_gate'
       },
@@ -84,8 +84,8 @@ const Story = (function () {
       },
       a_profile_prefilled: {
         lines: [
-          'eh btw, kelihatannya kamu udah isi semua data itu duluan di Pengaturan.',
-          'oke, aku pake yang udah ada aja kalau gitu.'
+          'eh, kayaknya semua itu udah keisi dari awal ya.',
+          'oke, aku pake yang udah ada aja kalo gitu.'
         ],
         next: 'a_demo_choice'
       },
@@ -142,10 +142,7 @@ const Story = (function () {
 
       // ---- real branching demo: three genuinely different replies ----
       a_demo_choice: {
-        lines: [
-          'btw coba jawab ini — cuma buat mastiin fiturnya jalan beneran.',
-          'gimana perasaan kamu soal hp baru ini?'
-        ],
+        lines: ['btw, gimana perasaan kamu soal hp baru ini?'],
         choices: [
           { label: 'Biasa aja sih.', next: 'a_after_casual' },
           { label: 'Jujur, agak was-was.', next: 'a_after_wary' },
@@ -158,8 +155,8 @@ const Story = (function () {
 
       a_single_note: {
         lines: [
-          'oh iya, satu lagi — kadang nanti cuma ada satu pilihan doang yang muncul di obrolan.',
-          'itu normal, bukan error. kalo males mencet terus, nyalain "Lanjut Otomatis" di Pengaturan aja.'
+          'oh iya, kadang nanti cuma ada satu balasan yang bisa kamu pilih.',
+          'itu emang gitu doang, bukan masalah — tinggal pilih aja.'
         ],
         next: 'a_single_demo'
       },
@@ -172,7 +169,7 @@ const Story = (function () {
       a_farewell: {
         lines: [
           'oke {{user}}, kayaknya itu doang yang perlu kamu tau buat sekarang.',
-          'aku bakal ilang dari kontak setelah ini — emang gitu sistemnya, jangan kaget.',
+          'aku bakal ilang dari kontak setelah ini — biasanya emang gitu, jangan kaget ya.',
           'tapi bentar lagi bakal ada nomor baru yang masuk.',
           'hati-hati aja sama sinyal di hp ini.'
         ],

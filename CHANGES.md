@@ -1,5 +1,28 @@
 # Changelog — Signal Lost
 
+## 2026-07-04 (lanjutan 6) — Bersihkan sisa referensi "sistem/fitur" di dialog Asisten
+
+Setelah lanjutan-5 (fokus ke dialog pasangan), audit ulang nemuin sisa
+kalimat Asisten yang MASIH kedengeran kayak sistem ngomong ke user,
+bukan orang beneran:
+
+- `"...jawab pake kata-kata sendiri di kotak bawah"` → hapus "kotak bawah"
+  (rujukan UI literal), sekarang cuma "jawab aja pake kata-kata sendiri".
+- `"...udah isi semua data itu duluan di Pengaturan"` → hapus nama app,
+  sekarang "kayaknya semua itu udah keisi dari awal ya".
+- `"...cuma buat mastiin fiturnya jalan beneran"` → dihapus total, kalimat
+  ini murni framing QA-testing, gak ada gunanya buat karakter.
+- `"...nyalain 'Lanjut Otomatis' di Pengaturan aja"` → dihapus penyebutan
+  nama toggle secara literal. Info soal opsi tunggal tetap disampaikan
+  ("kadang cuma ada satu balasan yang bisa dipilih"), tapi cara
+  mempercepatnya dibiarkan ditemukan sendiri lewat Pengaturan (yang
+  memang sudah ada hint text di situ) — bukan diumumkan di dalam chat.
+- `"...emang gitu sistemnya, jangan kaget"` → hapus kata "sistem", ini
+  masalah yang sama persis dengan yang ditemukan di dialog pasangan
+  (karakter kedengeran kayak entitas sistem, bukan orang).
+- Semua file lolos `node --check`, naskah dites ulang lewat simulasi Node.
+
+
 ## 2026-07-04 (lanjutan 5) — Pasangan gak lagi "jadi sinyal", notifikasi bisa diklik
 
 - **Framing dialog pasangan diperbaiki** — beberapa baris lama bikin dia
