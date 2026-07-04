@@ -75,7 +75,11 @@
     if (!AppState.get().flags.assistantNotifShown) {
       setTimeout(() => {
         if (Router.currentId() !== 'home') return;
-        Notify.show({ title: 'Asisten', body: 'Pesan baru masuk...' });
+        Notify.show({
+          title: 'Asisten',
+          body: 'Pesan baru masuk...',
+          onClick: () => Router.navigate('dashchat', { chatId: 'assistant' })
+        });
         AppState.set('flags.assistantNotifShown', true);
       }, 900);
     }

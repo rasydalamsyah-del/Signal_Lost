@@ -135,6 +135,8 @@ button{ font-family:inherit; cursor:pointer; }
 }
 .toast-banner.hidden{ display:none; }
 .toast-banner.show{ transform:translateY(0); opacity:1; }
+.toast-banner.toast-clickable{ pointer-events:auto; cursor:pointer; }
+.toast-banner.toast-clickable:active{ transform:translateY(0) scale(.97); }
 .toast-icon{
   width:32px; height:32px; border-radius:10px; background:var(--signal); color:var(--void);
   flex:0 0 auto; display:flex; align-items:center; justify-content:center;

@@ -179,7 +179,7 @@ const Story = (function () {
         effects: [
           { type: 'endThread', threadId: 'assistant' },
           { type: 'spawnThread', threadId: 'partner', contactId: 'partner', name: '???', avatar: '?', startNode: 'p_start' },
-          { type: 'notify', title: '??? ', body: 'Ada pesan baru masuk...' }
+          { type: 'notify', title: '??? ', body: 'Ada pesan baru masuk...', chatId: 'partner' }
         ]
       }
     },
@@ -205,12 +205,12 @@ const Story = (function () {
           { label: '(diem aja, biar dia lanjut ngomong)', next: 'p_branch_silent' }
         ]
       },
-      p_branch_who:   { lines: ['pertanyaan yang wajar sih.', 'tapi belom bisa jawab itu sekarang. belom waktunya.'], next: 'p_common1' },
-      p_branch_know:  { lines: ['kenal? lebih dari itu kayaknya.', 'tapi hp ini kayak gamau ngizinin aku cerita lebih jauh dulu.'], next: 'p_common1' },
+      p_branch_who:   { lines: ['pertanyaan yang wajar sih.', 'tapi aku belum siap jawab itu sekarang.'], next: 'p_common1' },
+      p_branch_know:  { lines: ['kenal? lebih dari itu kayaknya.', 'tapi... entah kenapa aku belum sanggup cerita lebih jauh sekarang.'], next: 'p_common1' },
       p_branch_silent:{ lines: ['...', 'kamu diem. oke.', 'aku ngerti sih kalo ini kedengeran aneh.'], next: 'p_common1' },
 
       p_common1: {
-        lines: ['yang penting aku masih di sini.', 'aku certain pelan-pelan deh, kalo sinyalnya ngizinin.'],
+        lines: ['yang penting aku masih di sini.', 'aku cerita pelan-pelan ya... entah kenapa susah banget buat mulai.'],
         next: 'p_choice2'
       },
       p_choice2: {
@@ -224,7 +224,7 @@ const Story = (function () {
       p_branch_trust: { lines: ['itu... lebih dari yang aku harepin.'], next: 'p_reveal_setup' },
 
       p_reveal_setup: {
-        lines: ['ada satu hal yang pasti gak berubah, walau sinyal ini kacau.', 'nama panggilan yang cuma kamu yang tau.'],
+        lines: ['ada satu hal yang pasti gak berubah, walaupun semuanya berasa aneh belakangan ini.', 'nama panggilan yang cuma kamu yang tau.'],
         choices: [ { label: 'Sebutin.', next: 'p_reveal' } ]
       },
       p_reveal: {
@@ -241,7 +241,7 @@ const Story = (function () {
       },
       p_hold: {
         // dead end on purpose — cliffhanger, next content continues here
-        lines: ['sinyalnya mulai gak stabil lagi di sisi aku.', 'aku hubungin lagi kalo udah bisa...']
+        lines: ['koneksi di sini mulai jelek lagi.', 'aku hubungin lagi kalo udah bisa ya...']
       }
     }
   };
@@ -292,7 +292,11 @@ const Story = (function () {
 
         case 'notify':
           if (window.Notify) {
-            Notify.show({ title: resolveText(fx.title), body: resolveText(fx.body) });
+            Notify.show({
+              title: resolveText(fx.title),
+              body: resolveText(fx.body),
+              onClick: fx.chatId ? () => Router.navigate('dashchat', { chatId: fx.chatId }) : null
+            });
           }
           break;
 

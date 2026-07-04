@@ -1,5 +1,25 @@
 # Changelog — Signal Lost
 
+## 2026-07-04 (lanjutan 5) — Pasangan gak lagi "jadi sinyal", notifikasi bisa diklik
+
+- **Framing dialog pasangan diperbaiki** — beberapa baris lama bikin dia
+  kedengeran kayak menyatu/jadi bagian dari sinyal itu sendiri ("kalo
+  sinyalnya ngizinin", "hp ini gamau ngizinin aku cerita", "sinyalnya
+  mulai gak stabil di sisi aku") — seolah dia ENTITAS sinyal, bukan orang
+  yang lagi chat pakai hp yang lagi bermasalah. Diganti jadi keraguan
+  manusiawi asli ("entah kenapa susah banget buat mulai", "aku belum
+  siap jawab itu sekarang", "koneksi di sini mulai jelek lagi" — koneksi
+  jelek itu alasan teknis biasa di baris terakhir aja, bukan penjelasan
+  kenapa dia gabisa ngomong dari awal).
+- **Notifikasi sekarang bisa diklik** — `core/notify.js` nerima `onClick`,
+  banner dapat class `.toast-clickable` biar keliatan interaktif. Klik
+  notifikasi "Asisten: pesan baru" di awal game atau "??? : ada pesan
+  baru" pas pasangan muncul, sekarang langsung buka chat itu
+  (`Router.navigate('dashchat', {chatId})`), gak cuma visual doang.
+- Semua file lolos `node --check`; skrip dialog dites ulang lewat
+  simulasi Node, hasil teks sudah sesuai.
+
+
 ## 2026-07-04 (lanjutan 4) — Nada dialog, skip pertanyaan yang sudah terjawab, fix bug badge
 
 Masukan dari testing manual, tiga perbaikan nyata:
