@@ -1,5 +1,78 @@
 # Changelog — Signal Lost
 
+## 2026-07-04 (lanjutan 3) — Story engine, profil nama dinamis, notifikasi global
+
+Fitur besar: DashChat sekarang jadi mesin cerita bercabang sungguhan, bukan
+placeholder balasan "...". Ini scope-nya:
+
+- **`core/state.js`** — tambah `profile` (8 field nama: kamu, pasangan,
+  sahabat kamu, sahabat pasangan, ibu/ayah kamu, ibu/ayah pasangan) dan
+  `story.threads` (progres per percakapan: node saat ini, sudah tampil
+  berapa baris, sedang nunggu pilihan/input atau tidak, apakah sudah
+  "selesai"). Tambah `AppState.resolveText()` yang mengganti token
+  `{{user}}`, `{{partner}}`, dst dengan nilai di `profile` (ada fallback
+  kata umum kalau field belum diisi, jadi tidak pernah muncul "undefined").
+  Tambah `AppState.touch()` untuk memberi tahu listener setelah mutasi
+  langsung ke contacts/chats (bukan lewat `set()`).
+- **`core/story.js`** (baru) — engine dialog bercabang + naskah lengkap.
+  Setiap node bisa berupa: beberapa baris teks berurutan (`lines`), input
+  bebas yang mengaktifkan kotak tulis dan menyimpan ke `profile` (`input`),
+  pilihan bertumpuk (`choices`), rantai otomatis ke node berikut tanpa
+  perlu tap (`next`), dan efek sekali-jalan (`effects`: ganti flag, kirim
+  notifikasi, akhiri thread, buat thread/kontak baru, ganti nama kontak).
+  Efek dijamin cuma jalan sekali per node (`runEffectsOnce`), termasuk
+  kalau nanti ada node jalan-buntu yang belum sempat lanjut dan
+  dibuka-tutup berkali-kali oleh pemain.
+  - Naskah **Asisten**: 20 node — sapaan, penjelasan mekanisme main
+    (kapan kotak tulis aktif vs kapan pilihan muncul), lalu menanyakan
+    ke-8 nama profil satu per satu, demo pilihan bercabang sungguhan
+    (3 respons beda tergantung pilihan), penjelasan setting "Lanjut
+    Otomatis", lalu berpamitan sambil mengakhiri percakapan.
+  - Naskah **Pasangan (`???`)**: 12 node — kontak misterius muncul
+    menggantikan Asisten, beberapa cabang pilihan asli (nada beda-beda
+    tergantung respons pemain), lalu pengungkapan nama (kontak otomatis
+    berganti dari `???` ke nama asli dari `profile.partner.name`),
+    berhenti di cliffhanger (memang sengaja — lanjutannya nanti).
+- **`apps/dashchat.js`** — dirombak total. Thread sekarang murni mengikuti
+  `core/story.js`: kotak tulis nonaktif secara default, aktif hanya saat
+  node minta input; pilihan muncul sebagai tombol bertumpuk di atas kotak
+  tulis (auto-wrap kalau teks panjang); pilihan tunggal tetap muncul
+  sebagai tombol kecuali setting "Lanjut Otomatis" menyala; percakapan
+  yang berakhir (`endThread`) otomatis hilang dari daftar & kembali ke
+  inbox. Dibuat robust terhadap "pemain pindah layar di tengah animasi
+  ketik" — progres per node (`revealedCount`) disimpan supaya reopen
+  chat melanjutkan, bukan mengulang dari awal.
+- **`core/router.js`** — tambah `Router.generation()`, counter yang naik
+  setiap render. Dipakai dashchat.js buat tahu persis kalau pemain sudah
+  pindah ke layar/percakapan lain (lebih akurat daripada cuma cek
+  `currentId()`, yang tidak bisa membedakan pindah antar chat berbeda
+  yang sama-sama beralamat "dashchat").
+- **`core/notify.js`** (baru) — banner notifikasi global
+  (`Notify.show({title, body})`) yang slide-in dari atas layar, bertahan
+  ±3.8 detik, lalu hilang sendiri. Independen dari router jadi bisa
+  muncul dari mana saja.
+- **`index.html`** — tambah elemen `#toast-banner`, urutan script baru
+  (`core/notify.js`, `core/story.js` dimuat sebelum `core/router.js`).
+- **`style.css`** — style untuk toast banner, tombol pilihan chat,
+  kotak input nonaktif, dan form profil di Settings.
+- **`apps/settings.js`** — bagian baru "Profil Cerita" (8 field nama,
+  semua bisa diedit kapan saja) + toggle "Lanjut Otomatis".
+- **`screens/homeScreen.js`** — badge DashChat sekarang lebih akurat
+  (menghitung juga kontak baru yang belum pernah dibalas), dan memicu
+  notifikasi "Asisten: pesan baru" sekali di awal game (ditandai lewat
+  `flags.assistantNotifShown` supaya tidak berulang).
+- **`screens/lockScreen.js`** — preview notifikasi di lock screen sekarang
+  ada fallback teks generik kalau chat belum ada pesan tapi kontaknya baru.
+- Semua file lolos `node --check`. Alur cerita penuh (isi 8 nama profil →
+  demo pilihan → serah terima ke kontak pasangan → pengungkapan nama)
+  sudah disimulasikan headless di Node dan hasilnya sesuai rancangan —
+  lihat histori commit untuk detail skrip tes.
+- **Belum selesai / lanjutan berikutnya:** naskah pasangan berhenti di
+  `p_hold` (cliffhanger, sengaja). Menambah node lanjutan tinggal nambah
+  entri baru di `STORY.partner` pada `core/story.js`, tidak perlu ubah
+  apa pun di `dashchat.js`.
+
+
 ## 2026-07-04 (lanjutan 2) — Perbaikan icon: bug warna hitam + upgrade ke ikon Lucide
 
 **Akar masalah "icon aplikasinya hitam doang":** ditemukan bug di `style.css`.

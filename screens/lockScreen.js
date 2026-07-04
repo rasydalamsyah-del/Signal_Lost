@@ -12,8 +12,10 @@
     const s = AppState.get();
     for (const id in s.chats) {
       const chat = s.chats[id];
+      const contact = s.contacts.find(c => c.id === id);
       const last = chat.messages[chat.messages.length - 1];
       if (last && last.from === 'them') return { name: chat.name, text: last.text };
+      if (contact && contact.isNew) return { name: chat.name, text: 'Pesan baru masuk' };
     }
     return null;
   }

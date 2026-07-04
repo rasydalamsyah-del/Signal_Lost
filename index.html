@@ -30,6 +30,15 @@
       <!-- Dynamic island: overlaps the status bar row, hidden on chromeless screens -->
       <div id="dynamic-island" class="dynamic-island hidden" aria-hidden="true"></div>
 
+      <!-- Global notification banner: fires from Notify.show(), independent of router -->
+      <div id="toast-banner" class="toast-banner hidden" aria-hidden="true">
+        <span class="toast-icon" id="toast-icon"></span>
+        <div class="toast-body">
+          <div class="toast-title" id="toast-title"></div>
+          <div class="toast-sub" id="toast-sub"></div>
+        </div>
+      </div>
+
       <!-- Status bar: clock, network, wifi, battery. Hidden on Start/Boot/Lock. -->
       <div id="status-bar" class="status-bar hidden">
         <span id="status-clock" class="status-clock">00:00</span>
@@ -69,6 +78,8 @@
   <!-- Load order matters: icons/state/router first, then screens, then apps, then main -->
   <script src="assets/icons.js"></script>
   <script src="core/state.js"></script>
+  <script src="core/notify.js"></script>
+  <script src="core/story.js"></script>
   <script src="core/router.js"></script>
 
   <script src="screens/navBar.js"></script>

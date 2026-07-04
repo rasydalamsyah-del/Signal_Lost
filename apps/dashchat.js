@@ -2,8 +2,11 @@
    apps/dashchat.js
    The main gameplay app. Two views sharing one route:
    - list view  (no params)            -> conversation list
-   - thread view (params.chatId)       -> open chat, can send messages
-   Wire your branching story into `handleReply()`.
+   - thread view (params.chatId)       -> story-driven conversation
+
+   Thread view is entirely driven by core/story.js: this file only
+   owns the DOM (typing animation, choice buttons, enabling/disabling
+   the text box) and calls into Story for "what happens next".
    ============================================================ */
 (function () {
 
@@ -30,18 +33,22 @@
     chatIds.forEach(id => {
       const chat = s.chats[id];
       const last = chat.messages[chat.messages.length - 1];
+      const contact = s.contacts.find(c => c.id === id);
       const row = document.createElement('div');
       row.className = 'list-item';
       row.style.cursor = 'pointer';
       row.innerHTML = `
         <div class="avatar">${chat.name[0] || '?'}</div>
         <div class="list-item-main">
-          <div class="list-item-title">${chat.name}</div>
-          <div class="list-item-sub">${last ? last.text : ''}</div>
+          <div class="list-item-title">${chat.name} ${contact && contact.isNew ? '<span style="color:var(--interference);font-size:10px">● baru</span>' : ''}</div>
+          <div class="list-item-sub">${last ? last.text : 'Ketuk untuk mulai...'}</div>
         </div>
         <div class="list-item-meta">${last ? last.time : ''}</div>
       `;
-      row.addEventListener('click', () => Router.navigate('dashchat', { chatId: id }));
+      row.addEventListener('click', () => {
+        if (contact) contact.isNew = false;
+        Router.navigate('dashchat', { chatId: id });
+      });
       list.appendChild(row);
     });
   }
@@ -60,15 +67,33 @@
         <div class="app-body">
           <div class="chat-messages" id="chat-messages"></div>
         </div>
-        <div class="chat-input-row">
-          <input class="chat-input" id="chat-input" type="text" placeholder="Tulis pesan...">
+        <div class="chat-choices" id="chat-choices"></div>
+        <div class="chat-input-row" id="chat-input-row">
+          <input class="chat-input" id="chat-input" type="text" placeholder="Pilih salah satu opsi di atas..." disabled>
           <button class="chat-send" id="chat-send">${ICONS.send}</button>
         </div>
       </div>
     `;
 
     const msgsEl = root.querySelector('#chat-messages');
-    let isTyping = false; // drives the "sedang mengetik" bubble below
+    const choicesEl = root.querySelector('#chat-choices');
+    const inputRowEl = root.querySelector('#chat-input-row');
+    const inputEl = root.querySelector('#chat-input');
+    const sendBtn = root.querySelector('#chat-send');
+
+    let isTyping = false;
+    let pendingInput = null; // the current node's `input` spec, while we're waiting on it
+    const myGen = Router.generation(); // snapshot: any navigation (even dashchat -> dashchat
+                                        // with a different chatId) bumps this, so async
+                                        // callbacks below know to stop touching this DOM
+
+    // Story threads have a matching entry in AppState.story.threads; chats
+    // without one (shouldn't normally happen) just behave like a static log.
+    const hasStory = !!Story.threadState(chatId);
+
+    function stillHere() {
+      return Router.generation() === myGen;
+    }
 
     function paint() {
       const bubbles = chat.messages.map(m => `
@@ -80,40 +105,153 @@
       msgsEl.innerHTML = bubbles + typingBubble;
       root.querySelector('.app-body').scrollTop = msgsEl.scrollHeight;
     }
-    paint();
+
+    function setInputEnabled(enabled, placeholder) {
+      inputEl.disabled = !enabled;
+      inputEl.placeholder = placeholder || (enabled ? 'Tulis pesan...' : 'Pilih salah satu opsi di atas...');
+      inputRowEl.classList.toggle('chat-input-row-disabled', !enabled);
+      if (enabled) inputEl.focus();
+    }
+
+    function renderChoices(choices) {
+      if (!choices || !choices.length) { choicesEl.innerHTML = ''; return; }
+      choicesEl.innerHTML = choices.map((c, i) => `
+        <button class="chat-choice-btn" data-i="${i}">${Story.resolveText(c.label)}</button>
+      `).join('');
+      choicesEl.querySelectorAll('.chat-choice-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const i = parseInt(btn.dataset.i, 10);
+          choicesEl.innerHTML = '';
+          pickChoice(choices[i]);
+        });
+      });
+    }
+
+    function pickChoice(choice) {
+      const time = new Date().toTimeString().slice(0, 5);
+      chat.messages.push({ from: 'me', text: Story.resolveText(choice.label), time });
+      paint();
+      Story.runEffects(chatId, choice.effects);
+      AppState.touch();
+      setTimeout(() => { if (stillHere()) enterNode(choice.next); }, 350);
+    }
+
+    // ---- reveal a node's lines one at a time (typing bubble in between),
+    // resuming from wherever we left off if the player navigated away mid-reveal ----
+    function revealLines(lines, startIdx, done) {
+      if (startIdx >= lines.length) return done();
+      isTyping = true;
+      paint();
+      const delay = 700 + Math.random() * 600;
+      setTimeout(() => {
+        if (!stillHere()) return;
+        isTyping = false;
+        const time = new Date().toTimeString().slice(0, 5);
+        chat.messages.push({ from: 'them', text: Story.resolveText(lines[startIdx]), time });
+        Story.bumpRevealed(chatId);
+        paint();
+        setTimeout(() => { if (stillHere()) revealLines(lines, startIdx + 1, done); }, 260);
+      }, delay);
+    }
+
+    // ---- enter (or resume) a node: reveal its lines, run its effects,
+    // then leave the thread waiting on a choice / input / or chain into `next` ----
+    function enterNode(nodeId, resuming) {
+      const node = Story.getNode(chatId, nodeId);
+      if (!node) { setInputEnabled(false); choicesEl.innerHTML = ''; return; } // unwritten content yet
+
+      let ts = Story.threadState(chatId);
+      if (!resuming || !ts || ts.nodeId !== nodeId) {
+        Story.setNode(chatId, nodeId);
+        ts = Story.threadState(chatId);
+      }
+
+      const lines = node.lines || [];
+      const startIdx = ts ? ts.revealedCount : 0;
+
+      const afterReveal = () => {
+        if (!stillHere()) return;
+
+        Story.runEffectsOnce(chatId, node.effects);
+        AppState.touch();
+
+        // refresh the header in case an effect (renameThread) changed it
+        const titleEl = root.querySelector('.app-header h1');
+        if (titleEl && s.chats[chatId]) titleEl.textContent = s.chats[chatId].name;
+
+        const tsAfter = Story.threadState(chatId);
+        if (!tsAfter || tsAfter.ended) {
+          // this thread just ended (e.g. the assistant tutorial finishing) —
+          // give the player a beat to read the final line, then bounce to the inbox
+          setInputEnabled(false);
+          choicesEl.innerHTML = '';
+          setTimeout(() => { if (stillHere()) renderList(root); }, 1300);
+          return;
+        }
+
+        if (node.choices && node.choices.length) {
+          if (node.choices.length === 1 && AppState.get().settings.autoAdvance) {
+            Story.setAwaiting(chatId, null);
+            setInputEnabled(false);
+            setTimeout(() => { if (stillHere()) pickChoice(node.choices[0]); }, 500);
+          } else {
+            setInputEnabled(false);
+            Story.setAwaiting(chatId, 'choice');
+            renderChoices(node.choices);
+          }
+        } else if (node.input) {
+          choicesEl.innerHTML = '';
+          pendingInput = node.input;
+          Story.setAwaiting(chatId, 'input');
+          setInputEnabled(true, node.input.placeholder);
+        } else if (node.next) {
+          Story.setAwaiting(chatId, null);
+          setInputEnabled(false);
+          enterNode(node.next);
+        } else {
+          // dead end: no choices/input/next -- nothing more written yet
+          Story.setAwaiting(chatId, null);
+          setInputEnabled(false);
+        }
+      };
+
+      if (startIdx >= lines.length) afterReveal();
+      else revealLines(lines, startIdx, afterReveal);
+    }
 
     function send() {
-      const input = root.querySelector('#chat-input');
-      const text = input.value.trim();
+      if (!pendingInput) return; // box is only "live" while a node is asking for input
+      const text = inputEl.value.trim();
       if (!text) return;
       const time = new Date().toTimeString().slice(0, 5);
       chat.messages.push({ from: 'me', text, time });
-      input.value = '';
+      inputEl.value = '';
       paint();
-      AppState.set('flags.lastPlayerMessage', text); // in case story logic reads it
-      handleReply();
+      if (pendingInput.savesTo) AppState.set(pendingInput.savesTo, text);
+      const next = pendingInput.next;
+      pendingInput = null;
+      setInputEnabled(false);
+      setTimeout(() => { if (stillHere()) enterNode(next); }, 350);
     }
 
-    // ---- placeholder reply logic: replace with your branching story ----
-    // Shows a "typing..." bubble first, then swaps it for the real reply —
-    // matches the real DashChat feel instead of the message popping in instantly.
-    function handleReply() {
-      isTyping = true;
-      paint();
+    sendBtn.addEventListener('click', send);
+    inputEl.addEventListener('keydown', e => { if (e.key === 'Enter') send(); });
 
-      const typingDuration = 900 + Math.random() * 700; // small variance so it doesn't feel robotic
-      setTimeout(() => {
-        isTyping = false;
-        const time = new Date().toTimeString().slice(0, 5);
-        chat.messages.push({ from: 'them', text: '...', time });
-        if (Router.currentId() === 'dashchat') paint();
-      }, typingDuration);
+    // ---- boot / resume this thread ----
+    paint();
+    if (hasStory) {
+      const ts = Story.threadState(chatId);
+      if (ts.awaiting === 'choice') {
+        const node = Story.getNode(chatId, ts.nodeId);
+        renderChoices(node.choices);
+      } else if (ts.awaiting === 'input') {
+        const node = Story.getNode(chatId, ts.nodeId);
+        pendingInput = node.input;
+        setInputEnabled(true, node.input.placeholder);
+      } else {
+        enterNode(ts.nodeId, true); // fresh node, or resume mid-reveal
+      }
     }
-
-    root.querySelector('#chat-send').addEventListener('click', send);
-    root.querySelector('#chat-input').addEventListener('keydown', e => {
-      if (e.key === 'Enter') send();
-    });
   }
 
   Router.register('dashchat', (root, params) => {

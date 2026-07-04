@@ -16,6 +16,9 @@ const Router = (function () {
 
   let history = [];      // stack of { id, render }
   let recentApps = [];   // for the "Recent Apps" screen: { id, name, time }
+  let gen = 0;            // bumped every render; lets async code (typing timers,
+                          // story reveals) know if the screen it was writing to
+                          // has since been replaced by a different navigation
 
   const registry = {};   // id -> render function
 
@@ -31,6 +34,7 @@ const Router = (function () {
   }
 
   function renderCurrent() {
+    gen++;
     const top = history[history.length - 1];
     if (!top) return;
     applyChrome(top.id);
@@ -81,5 +85,7 @@ const Router = (function () {
     return history.length ? history[history.length - 1].id : null;
   }
 
-  return { register, navigate, replace, back, home, getRecentApps, forgetRecent, currentId };
+  function generation() { return gen; }
+
+  return { register, navigate, replace, back, home, getRecentApps, forgetRecent, currentId, generation };
 })();

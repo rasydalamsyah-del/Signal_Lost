@@ -30,9 +30,12 @@
     }
     if (app.id === 'dashchat') {
       let n = 0;
-      Object.values(s.chats).forEach(c => {
-        const last = c.messages[c.messages.length - 1];
-        if (last && last.from === 'them') n++;
+      Object.keys(s.chats).forEach(id => {
+        const chat = s.chats[id];
+        const contact = s.contacts.find(c => c.id === id);
+        const last = chat.messages[chat.messages.length - 1];
+        const unread = (contact && contact.isNew) || (last && last.from === 'them');
+        if (unread) n++;
       });
       return n > 0 ? n : null;
     }
@@ -69,6 +72,16 @@
     root.querySelectorAll('.app-icon').forEach(btn => {
       btn.addEventListener('click', () => Router.navigate(btn.dataset.app));
     });
+
+    // first time ever reaching Home: fire the "pesan baru" banner for the
+    // Asisten thread. Gated by a flag so it only ever happens once.
+    if (!AppState.get().flags.assistantNotifShown) {
+      setTimeout(() => {
+        if (Router.currentId() !== 'home') return;
+        Notify.show({ title: 'Asisten', body: 'Pesan baru masuk...' });
+        AppState.set('flags.assistantNotifShown', true);
+      }, 900);
+    }
   }
 
   Router.register('home', render);
