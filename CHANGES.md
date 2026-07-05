@@ -1,5 +1,66 @@
 # Changelog — Signal Lost
 
+## 2026-07-04 (lanjutan 8) — Reveal kontak teman, cutscene lompat waktu, mode "ketuk buat lanjut"
+
+Fitur besar baru sesuai request: di tengah obrolan pasangan, pasangan
+kasih tau kalau teman user ({{userFriend}}) udah lama pengen ngobrol
+tapi nomor user kemarin nonaktif, terus ngasih kontaknya.
+
+- **`core/state.js`** — tambah `phone.time` (jam in-game FIKSI, menit
+  sejak tengah malam, default 810 = 13:30). Ini terpisah total dari jam
+  device asli.
+- **`screens/statusBar.js`** — jam di status bar sekarang baca
+  `phone.time`, bukan `new Date()` device asli. Cuma berubah kalau
+  cerita yang secara eksplisit menggerakkannya (lewat cutscene di bawah).
+- **`screens/timeSkip.js`** (baru) — screen baru: layar hitam, jam
+  digital besar di tengah, jalan cepat maju sejumlah menit yang
+  ditentukan (dipakai 60 menit / 1 jam), sambil `phone.time` di-update
+  tiap tick — jadi jam di status bar (atas) ikut berubah live selama
+  animasi berjalan, bukan cuma jam di tengah doang. Setelah animasi
+  selesai, otomatis lempar balik ke Home (atau screen lain sesuai
+  parameter) dan bisa jalanin efek lanjutan (`onComplete`).
+- **`core/router.js`** — tambah `NAV_HIDDEN` (beda dari `CHROMELESS`):
+  status bar tetap kelihatan tapi nav bar disembunyikan, khusus buat
+  cutscene kayak `timeSkip` biar gak bisa di-back/di-home di tengah animasi.
+- **`core/story.js` / `apps/dashchat.js`** — 3 kemampuan baru di engine:
+  1. `skipTo` sekarang bisa cek flag cerita juga (`when:'flag'`), bukan
+     cuma "semua profil udah keisi" — dipakai buat percabangan siapa
+     yang minta kontak duluan.
+  2. `gotoScreen` di sebuah node — mindahin dari obrolan ke screen lain
+     (misal cutscene time-skip), dan screen itu yang tanggung jawab
+     ngembaliin pemain lagi.
+  3. `holdUntilTap` — buat obrolan yang jalan paralel sama obrolan lain
+     yang belum kelar (di sini: chat teman muncul sementara chat
+     pasangan masih ada): cuma tampil 1 baris duluan, sisanya nunggu
+     pemain betul-betul buka chat itu DAN ketuk di mana aja di layar
+     obrolannya (bukan tombol) buat lanjut. Progresnya kesimpen — keluar
+     masuk chat gak bikin ke-replay dari awal.
+  4. Effect baru `deliverFirstLine` — buat ngirim 1 baris pesan langsung
+     ke chat log TANPA animasi ketik, karena itu "kejadian" pas pemain
+     lagi nggak di layar situ (pas time-skip/di Home). Dikombinasikan
+     sama `holdUntilTap` di baris berikutnya.
+  5. **Bug ikutan ketemu & diperbaiki**: `renderThread` gak pernah
+     bersihin `contact.isNew` kalau chat dibuka LANGSUNG dari notifikasi
+     (cuma dibersihin kalau klik baris di list) — badge bisa nyangkut
+     lagi kalau notifikasi diklik. Sekarang dibersihkan di `renderThread`
+     langsung, jadi berlaku dari jalur mana pun chat itu dibuka.
+- **Naskah baru** (`core/story.js`):
+  - Titik cabang baru di obrolan pasangan (`p_ask_friend_gate`): pemain
+    bisa PROAKTIF minta nomor {{userFriend}}, atau diemin aja biar
+    pasangan yang nawarin sendiri — nge-set flag `askedForFriendContact`.
+  - Kedua jalur berujung ke kontak `friend` baru (otomatis muncul di
+    Kontak & DashChat) + cutscene lompat 1 jam.
+  - **Kalo gak minta duluan**: teman yang chat pertama (1 baris lewat
+    notifikasi + `deliverFirstLine`, sisanya nunggu diketuk), obrolan
+    ngalir natural nanya kabar & dari mana dapet nomor.
+  - **Kalo minta duluan**: pemain sendiri yang milih kalimat pembuka
+    buat ngirim ke teman (pilihan tombol, bukan nunggu notifikasi) —
+    gak nunggu teman chat duluan, sesuai request.
+- Semua dites lewat simulasi Node: kedua skenario cabang, dan effect
+  `deliverFirstLine` dites langsung (pesan kesimpen bener, state
+  `awaiting:'tap'` keset otomatis, badge kontak ke-flag baru lagi).
+
+
 ## 2026-07-04 (lanjutan 7) — Investigasi notifikasi "tidak bisa diklik"
 
 Ditest 3 lapis pakai jsdom (headless browser) buat mastiin ini bukan bug

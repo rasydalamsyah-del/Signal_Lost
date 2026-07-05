@@ -1,8 +1,14 @@
 /* ============================================================
    screens/statusBar.js
-   Keeps the clock ticking and reflects AppState.phone (network /
-   battery) into the status bar, using real SVG icons from
-   assets/icons.js. Also drives the dynamic-island "live" pulse.
+   Reflects AppState.phone (in-game clock / network / battery)
+   into the status bar, using real SVG icons from assets/icons.js.
+   Also drives the dynamic-island "live" pulse.
+
+   The clock is FICTIONAL (AppState.phone.time, minutes since
+   midnight) — not the real device clock. It only moves when a
+   story beat explicitly advances it (e.g. screens/timeSkip.js),
+   which is why this file just re-renders on every AppState change
+   instead of polling a real timer.
    ============================================================ */
 (function () {
   function pad(n) { return n.toString().padStart(2, '0'); }
@@ -10,8 +16,8 @@
   function renderClock() {
     const el = document.getElementById('status-clock');
     if (!el) return;
-    const now = new Date();
-    el.textContent = pad(now.getHours()) + ':' + pad(now.getMinutes());
+    const mins = ((AppState.get().phone.time % 1440) + 1440) % 1440; // wrap 0-1439
+    el.textContent = pad(Math.floor(mins / 60)) + ':' + pad(mins % 60);
   }
 
   function signalBarsSvg(bars) {
@@ -58,7 +64,6 @@
 
   document.addEventListener('DOMContentLoaded', () => {
     renderAll();
-    setInterval(renderClock, 1000 * 15);
     AppState.subscribe(renderAll);
   });
 

@@ -10,6 +10,21 @@
    ============================================================ */
 (function () {
 
+  // shared condition evaluator for node.skipTo — supports:
+  //   { when:'allFilled', paths:[...], next }   — every profile path has a value
+  //   { when:'flag', flag:'x', equals:true, next } — a story flag matches
+  function evalCondition(cond) {
+    if (!cond) return false;
+    if (cond.when === 'allFilled') {
+      const paths = cond.paths || [];
+      return paths.length > 0 && paths.every(p => !!AppState.getPath(p));
+    }
+    if (cond.when === 'flag') {
+      return AppState.get().flags[cond.flag] === cond.equals;
+    }
+    return false;
+  }
+
   function renderList(root) {
     const s = AppState.get();
     const chatIds = Object.keys(s.chats);
@@ -58,6 +73,12 @@
     const chat = s.chats[chatId];
     if (!chat) return renderList(root);
 
+    // clear the "new" flag the moment this thread is actually opened,
+    // regardless of how the player got here (list row tap, or a
+    // notification banner tap that jumps straight in)
+    const openedContact = s.contacts.find(c => c.id === chatId);
+    if (openedContact && openedContact.isNew) { openedContact.isNew = false; AppState.touch(); }
+
     root.innerHTML = `
       <div class="app-screen">
         <div class="app-header">
@@ -66,6 +87,7 @@
         </div>
         <div class="app-body">
           <div class="chat-messages" id="chat-messages"></div>
+          <div class="chat-tap-hint hidden" id="chat-tap-hint">ketuk di mana aja buat lanjut</div>
         </div>
         <div class="chat-choices" id="chat-choices"></div>
         <div class="chat-input-row" id="chat-input-row">
@@ -81,8 +103,12 @@
     const inputEl = root.querySelector('#chat-input');
     const sendBtn = root.querySelector('#chat-send');
 
+    const bodyEl = root.querySelector('.app-body');
+    const tapHintEl = root.querySelector('#chat-tap-hint');
+
     let isTyping = false;
     let pendingInput = null; // the current node's `input` spec, while we're waiting on it
+    let tapTarget = null;    // node id to advance to on next tap-anywhere, while node.holdUntilTap is active
     const myGen = Router.generation(); // snapshot: any navigation (even dashchat -> dashchat
                                         // with a different chatId) bumps this, so async
                                         // callbacks below know to stop touching this DOM
@@ -94,6 +120,19 @@
     function stillHere() {
       return Router.generation() === myGen;
     }
+
+    function showTapHint(nextNodeId) {
+      tapTarget = nextNodeId;
+      tapHintEl.classList.remove('hidden');
+    }
+
+    bodyEl.addEventListener('click', () => {
+      if (!tapTarget) return;
+      const next = tapTarget;
+      tapTarget = null;
+      tapHintEl.classList.add('hidden');
+      enterNode(next);
+    });
 
     function paint() {
       const bubbles = chat.messages.map(m => `
@@ -160,15 +199,14 @@
       const node = Story.getNode(chatId, nodeId);
       if (!node) { setInputEnabled(false); choicesEl.innerHTML = ''; return; } // unwritten content yet
 
-      // conditional branch used for "skip the whole name-collection block if
-      // the player already filled every field in Pengaturan" — see a_profile_gate
-      if (node.skipTo && !resuming) {
-        const paths = node.skipTo.paths || [];
-        const allFilled = paths.length > 0 && paths.every(p => !!AppState.getPath(p));
-        if (node.skipTo.when === 'allFilled' && allFilled) {
-          enterNode(node.skipTo.next);
-          return;
-        }
+      // conditional branch: used for (1) "skip the whole name-collection
+      // block if the player already filled every field in Pengaturan" —
+      // see a_profile_gate, and (2) routing based on a story flag, e.g.
+      // "did the player already ask for this contact earlier?" — see
+      // f_start in the friend thread.
+      if (node.skipTo && !resuming && evalCondition(node.skipTo)) {
+        enterNode(node.skipTo.next);
+        return;
       }
 
       // don't re-ask a question whose answer is already known (e.g. the
@@ -225,6 +263,23 @@
           pendingInput = node.input;
           Story.setAwaiting(chatId, 'input');
           setInputEnabled(true, node.input.placeholder);
+        } else if (node.gotoScreen) {
+          // scripted screen transition (e.g. the time-skip cutscene) —
+          // takes over completely, story resumes wherever gotoScreen sends it
+          Story.setAwaiting(chatId, null);
+          setInputEnabled(false);
+          choicesEl.innerHTML = '';
+          setTimeout(() => {
+            if (!stillHere()) return;
+            Router.navigate(node.gotoScreen.id, node.gotoScreen.params || {});
+          }, 900);
+        } else if (node.holdUntilTap) {
+          // this thread is running in parallel with something else the
+          // player is doing — don't cascade more lines automatically,
+          // just wait for them to actually tap into this conversation
+          setInputEnabled(false);
+          Story.setAwaiting(chatId, 'tap');
+          showTapHint(node.holdUntilTap);
         } else if (node.next) {
           Story.setAwaiting(chatId, null);
           setInputEnabled(false);
@@ -269,6 +324,9 @@
         const node = Story.getNode(chatId, ts.nodeId);
         pendingInput = node.input;
         setInputEnabled(true, node.input.placeholder);
+      } else if (ts.awaiting === 'tap') {
+        const node = Story.getNode(chatId, ts.nodeId);
+        showTapHint(node.holdUntilTap);
       } else {
         enterNode(ts.nodeId, true); // fresh node, or resume mid-reveal
       }

@@ -24,7 +24,10 @@ const AppState = (function () {
       },
       phone: {
         network: 4,      // 0-4 bars, drop this for "signal lost" moments
-        battery: 78       // 0-100
+        battery: 78,      // 0-100
+        time: 810         // in-game clock, minutes since midnight (810 = 13:30).
+                          // Fictional — independent of the real device clock.
+                          // Only story beats (like a time-skip cutscene) move it.
       },
 
       // ---- story profile: every name the story can reference ----

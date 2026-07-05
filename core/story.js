@@ -23,13 +23,31 @@
                            before choices/input/next are evaluated.
                            See runEffects() below for supported types.
      skipTo:  { when:'allFilled', paths:[...], next }
+                           or { when:'flag', flag:'x', equals:true, next }
                            — checked by apps/dashchat.js BEFORE this node's
-                           lines are shown. If every dot-path in `paths`
-                           already has a value, jump straight to `next`
-                           instead (used so the assistant doesn't re-ask
-                           for names the player already filled in
-                           Pengaturan). Individual `input` nodes also
-                           silently skip themselves the same way, per field.
+                           lines are shown. 'allFilled' jumps to `next` if
+                           every dot-path already has a value (used so the
+                           assistant doesn't re-ask for names the player
+                           already filled in Pengaturan). 'flag' jumps to
+                           `next` if a story flag matches `equals` (used
+                           for branching on an earlier choice, e.g. "did
+                           the player already ask for this contact?").
+                           Individual `input` nodes also silently skip
+                           themselves the same way, per field.
+     gotoScreen: { id, params }
+                           — hands off to a whole different screen (e.g.
+                           the time-skip cutscene) instead of continuing
+                           the conversation. That screen is responsible
+                           for bringing the player back (see
+                           screens/timeSkip.js).
+     holdUntilTap: nodeId  — for threads running in parallel with
+                           whatever the player is actually doing (e.g. a
+                           friend texting while the partner conversation
+                           is still open elsewhere): show this node's
+                           lines, then stop and wait for a tap anywhere
+                           on the chat body — not a button — before
+                           moving to `nodeId`. Survives leaving and
+                           re-opening the chat.
 
    A node with none of input/choices/next is a dead end — "no new
    content yet", which is exactly where the current partner script
@@ -234,11 +252,139 @@ const Story = (function () {
       },
       p_after_reveal: {
         lines: ['maaf ya soal misteri barusan.', 'aku... gatau harus mulai darimana buat cerita apa yang sebenernya kejadian.'],
-        next: 'p_hold'
+        next: 'p_ask_friend_gate'
       },
+
+      // ---- side beat: reveal the friend's contact. Branches on whether
+      // the player proactively asked (flag set by the choice below) or
+      // let the partner bring it up first — either way it ends the same
+      // way (a new contact + a time-skip), just with different framing
+      // and a different opening flow in the friend thread itself.
+      p_ask_friend_gate: {
+        lines: ['eh, ngomong-ngomong...'],
+        choices: [
+          {
+            label: 'Boleh minta nomor {{userFriend}}? aku kangen ngobrol.',
+            next: 'p_friend_user_asked',
+            effects: [ { type: 'setFlag', flag: 'askedForFriendContact', value: true } ]
+          },
+          { label: '(gak nanya apa-apa, biarin dia lanjut cerita)', next: 'p_friend_offered' }
+        ]
+      },
+      p_friend_user_asked: {
+        lines: [
+          'eh, kebetulan banget.',
+          '{{userFriend}} juga udah lama pengen ngobrol sama kamu, tapi nomor kamu kemarin-kemarin nonaktif jadi belom bisa.',
+          'nih, aku kasih nomornya.'
+        ],
+        effects: [
+          { type: 'spawnThread', threadId: 'friend', contactId: 'friend', name: '{{userFriend}}', avatar: '?', startNode: 'f_user_initiated' },
+          { type: 'setFlag', flag: 'friendContactGiven', value: true }
+        ],
+        gotoScreen: {
+          id: 'timeSkip',
+          params: {
+            minutes: 60,
+            thenThreadId: 'partner', thenNode: 'p_hold',
+            afterId: 'home',
+            onComplete: [
+              { type: 'notify', title: 'Kontak baru', body: 'Nomor {{userFriend}} udah masuk ke kontak kamu.', chatId: 'friend' }
+            ]
+          }
+        }
+      },
+      p_friend_offered: {
+        lines: [
+          'btw, {{userFriend}} udah lama pengen ngobrol sama kamu.',
+          'tapi nomor kamu kemarin-kemarin nonaktif, jadi belom bisa.',
+          'nih aku kasih nomornya — {{userFriend}} juga aku kasih nomor kamu.'
+        ],
+        effects: [
+          { type: 'spawnThread', threadId: 'friend', contactId: 'friend', name: '{{userFriend}}', avatar: '?', startNode: 'f_friend_initiated' },
+          { type: 'setFlag', flag: 'friendContactGiven', value: true }
+        ],
+        gotoScreen: {
+          id: 'timeSkip',
+          params: {
+            minutes: 60,
+            thenThreadId: 'partner', thenNode: 'p_hold',
+            afterId: 'home',
+            onComplete: [
+              { type: 'deliverFirstLine', threadId: 'friend' },
+              { type: 'notify', title: '{{userFriend}}', body: 'Pesan baru masuk...', chatId: 'friend' }
+            ]
+          }
+        }
+      },
+
       p_hold: {
         // dead end on purpose — cliffhanger, next content continues here
         lines: ['koneksi di sini mulai jelek lagi.', 'aku hubungin lagi kalo udah bisa ya...']
+      }
+    },
+
+    // ---------------------------------------------------------
+    // FRIEND (profile.userFriend) — starts either with the friend
+    // texting first (didn't ask) or with the player picking the
+    // opening line themselves (asked partner for it proactively).
+    // The friend-initiated opener is delivered instantly via
+    // `deliverFirstLine` (see p_friend_offered above) since it
+    // happens while the player is off in the time-skip/home screen,
+    // not actually watching this chat — so it uses `holdUntilTap`
+    // rather than auto-cascading, letting the player control the
+    // pace once they do open it instead of it dumping everything at once.
+    // ---------------------------------------------------------
+    friend: {
+      f_friend_initiated: {
+        lines: ['eh, halo! ini beneran nomor {{user}} kan?'],
+        holdUntilTap: 'f_friend_initiated_2'
+      },
+      f_friend_initiated_2: {
+        lines: [
+          'gimana kabarnya? udah lama banget kita gak ngobrol.',
+          'aku dapet nomor kamu dari {{partner}}, katanya nomor kamu kemarin-kemarin nonaktif.'
+        ],
+        next: 'f_choice1'
+      },
+      f_choice1: {
+        lines: ['jadi gimana, kabar kamu gimana?'],
+        choices: [
+          { label: 'Baik kok! maaf ya lama gak bisa dihubungi.', next: 'f_after_a' },
+          { label: 'Lumayan sih, banyak yang kejadian belakangan ini.', next: 'f_after_b' }
+        ]
+      },
+      f_after_a: { lines: ['santai aja, yang penting sekarang udah bisa lagi.'], next: 'f_hold' },
+      f_after_b: { lines: ['wah, cerita dong kalo udah siap.'], next: 'f_hold' },
+      f_hold: {
+        lines: ['btw seneng deh akhirnya bisa chat kamu lagi.', 'nanti kita ngobrol lagi ya!']
+      },
+
+      f_user_initiated: {
+        lines: [],
+        choices: [
+          { label: 'Halo! ini aku, {{user}}. katanya {{partner}} kasih nomor kamu ya?', next: 'f_u_reply_a' },
+          { label: 'Eh langsung aja — kabar-kabar dong! lama gak ngobrol.', next: 'f_u_reply_b' }
+        ]
+      },
+      f_u_reply_a: {
+        lines: ['iya bener! akhirnya, udah lama nungguin ini.', 'nomor kamu kemarin-kemarin nonaktif soalnya.'],
+        next: 'f_u_common'
+      },
+      f_u_reply_b: {
+        lines: ['eh, {{user}}! kaget tapi seneng banget lo tiba-tiba chat.', 'kemarin-kemarin emang nomor kamu nonaktif ya?'],
+        next: 'f_u_common'
+      },
+      f_u_common: {
+        lines: ['gimana kabarnya belakangan ini?'],
+        choices: [
+          { label: 'Baik-baik aja kok.', next: 'f_u_after_a' },
+          { label: 'Banyak cerita sih, nanti aku ceritain.', next: 'f_u_after_b' }
+        ]
+      },
+      f_u_after_a: { lines: ['syukur deh kalo gitu.'], next: 'f_u_hold' },
+      f_u_after_b: { lines: ['wah, penasaran jadinya. cerita kapan-kapan ya!'], next: 'f_u_hold' },
+      f_u_hold: {
+        lines: ['seneng deh akhirnya bisa ngobrol lagi.', 'chat-chat lagi ya kalo sempet!']
       }
     }
   };
@@ -323,6 +469,27 @@ const Story = (function () {
           const contact = s.contacts.find(c => c.id === fx.threadId);
           if (contact) contact.name = name;
           if (s.chats[fx.threadId]) s.chats[fx.threadId].name = name;
+          break;
+        }
+
+        // deliver a node's first line straight into a thread's message
+        // log immediately, skipping the usual typing-reveal animation —
+        // used when something happens "off-screen" while the player is
+        // busy elsewhere (e.g. a friend's opening text arriving during
+        // a time-skip). The rest of that node's content, if any, still
+        // waits for the player via `holdUntilTap`/next like normal.
+        case 'deliverFirstLine': {
+          const ts = s.story.threads[fx.threadId];
+          const chat = s.chats[fx.threadId];
+          if (!ts || !chat) break;
+          const node = STORY[fx.threadId] && STORY[fx.threadId][ts.nodeId];
+          if (!node || !node.lines || !node.lines.length) break;
+          const time = new Date().toTimeString().slice(0, 5);
+          chat.messages.push({ from: 'them', text: resolveText(node.lines[0]), time });
+          ts.revealedCount = 1;
+          ts.awaiting = node.holdUntilTap ? 'tap' : null;
+          const contact = s.contacts.find(c => c.id === fx.threadId);
+          if (contact) contact.isNew = true; // (re)flag as unread — this is new content arriving
           break;
         }
 
