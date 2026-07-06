@@ -286,7 +286,9 @@ const Story = (function () {
           params: {
             minutes: 60,
             thenThreadId: 'partner', thenNode: 'p_hold',
-            afterId: 'home',
+            afterId: 'dashchat', afterParams: { chatId: 'partner' }, // land back on the
+                                                                       // still-open partner
+                                                                       // chat, not Home
             onComplete: [
               { type: 'notify', title: 'Kontak baru', body: 'Nomor {{userFriend}} udah masuk ke kontak kamu.', chatId: 'friend' }
             ]
@@ -308,7 +310,9 @@ const Story = (function () {
           params: {
             minutes: 60,
             thenThreadId: 'partner', thenNode: 'p_hold',
-            afterId: 'home',
+            afterId: 'dashchat', afterParams: { chatId: 'partner' }, // land back on the
+                                                                       // still-open partner
+                                                                       // chat, not Home
             onComplete: [
               { type: 'deliverFirstLine', threadId: 'friend' },
               { type: 'notify', title: '{{userFriend}}', body: 'Pesan baru masuk...', chatId: 'friend' }

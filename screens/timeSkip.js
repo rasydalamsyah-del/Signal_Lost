@@ -5,7 +5,10 @@
 
    Triggered by a story node's `gotoScreen` (see apps/dashchat.js),
    e.g.: gotoScreen: { id: 'timeSkip', params: { minutes: 60,
-   thenThreadId: 'partner', thenNode: 'p_closing', afterId: 'home' } }
+   thenThreadId: 'partner', thenNode: 'p_closing',
+   afterId: 'dashchat', afterParams: { chatId: 'partner' } } }
+   — afterId defaults to 'home' only if the caller omits it; usually
+   you want to land back on whichever chat was open, not Home.
 
    params:
      minutes       — how many in-game minutes to fast-forward
@@ -20,7 +23,10 @@
 (function () {
   function pad(n) { return n.toString().padStart(2, '0'); }
   function fmt(mins) {
-    const m = ((mins % 1440) + 1440) % 1440;
+    const m = Math.round(((mins % 1440) + 1440) % 1440); // round first — mins can be
+                                                           // fractional mid-animation,
+                                                           // otherwise minutes render
+                                                           // as e.g. "34.45" instead of "34"
     return pad(Math.floor(m / 60)) + ':' + pad(m % 60);
   }
 

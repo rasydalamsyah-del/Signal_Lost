@@ -16,7 +16,7 @@
   function renderClock() {
     const el = document.getElementById('status-clock');
     if (!el) return;
-    const mins = ((AppState.get().phone.time % 1440) + 1440) % 1440; // wrap 0-1439
+    const mins = Math.round(((AppState.get().phone.time % 1440) + 1440) % 1440); // wrap 0-1439, defensively rounded
     el.textContent = pad(Math.floor(mins / 60)) + ':' + pad(mins % 60);
   }
 

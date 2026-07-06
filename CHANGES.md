@@ -1,5 +1,26 @@
 # Changelog — Signal Lost
 
+## 2026-07-05 (lanjutan 10) — Fix jam desimal & posisi kembali setelah time-skip
+
+Dua bug nyata yang dilaporkan user setelah coba cutscene lompat waktu:
+
+1. **Jam nunjukkin desimal** (mis. "13:34.45") — `screens/timeSkip.js`
+   memformat menit yang masih pecahan (mid-animasi, sebelum dibulatkan)
+   langsung ke teks, jadi `menit % 60` menghasilkan angka desimal.
+   Fix: `fmt()` sekarang membulatkan (`Math.round`) menitnya dulu
+   sebelum di-pad/ditampilkan. `screens/statusBar.js` juga dikasih
+   pembulatan defensif yang sama biar konsisten.
+2. **Balik ke Home, bukan ke chat yang tadi terbuka** — kedua node
+   cerita yang memicu cutscene (`p_friend_user_asked` dan
+   `p_friend_offered` di `core/story.js`) hardcode `afterId: 'home'`.
+   Fix: diganti jadi `afterId: 'dashchat', afterParams: { chatId:
+   'partner' }`, jadi begitu cutscene selesai, pemain balik persis ke
+   thread chat pasangan yang tadi sedang dibuka, bukan ke Home.
+   `screens/timeSkip.js` sudah generik (`params.afterId` /
+   `params.afterParams`), jadi tidak perlu ubah engine-nya sendiri —
+   cukup perbaiki data node ceritanya. Doc-comment contoh di atas file
+   juga diperbarui biar tidak menyesatkan lagi.
+
 ## 2026-07-04 (lanjutan 9) — Perbaiki jitter angka jam di cutscene time-skip
 
 Jam digital di scene lompat waktu kelihatan geser kanan-kiri tiap ganti
