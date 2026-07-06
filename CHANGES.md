@@ -1,5 +1,23 @@
 # Changelog — Signal Lost
 
+## 2026-07-04 (lanjutan 9) — Perbaiki jitter angka jam di cutscene time-skip
+
+Jam digital di scene lompat waktu kelihatan geser kanan-kiri tiap ganti
+angka. Penyebabnya: browser gak otomatis kasih lebar yang sama persis ke
+tiap digit meski fontnya monospace (`Space Mono`), dan blok teksnya gak
+punya lebar tetap jadi ikut geser pas lebar teks berubah dikit.
+
+- `style.css` (`.timeskip-clock`): tambah `font-variant-numeric:
+  tabular-nums` (+ fallback `font-feature-settings`) buat maksa tiap
+  digit punya lebar sama persis, dan kasih `width` tetap + `text-align:
+  center` biar posisi blok jamnya diam di tempat gak peduli apa pun.
+  Sekalian tambah animasi "tick" halus (opacity berkedip tipis tiap
+  ~0.45 detik) biar kerasa hidup, bukan cuma teks yang tiba-tiba ganti.
+- `screens/timeSkip.js`: jumlah step animasi dinaikin dari 24 ke 48
+  (interval lebih rapat, 55ms), jadi progresnya kerasa lebih mulus,
+  bukan loncat-loncat.
+
+
 ## 2026-07-04 (lanjutan 8) — Reveal kontak teman, cutscene lompat waktu, mode "ketuk buat lanjut"
 
 Fitur besar baru sesuai request: di tengah obrolan pasangan, pasangan

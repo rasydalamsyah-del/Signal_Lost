@@ -37,7 +37,7 @@
     `;
 
     const clockEl = root.querySelector('#timeskip-clock');
-    const totalSteps = 24; // how many visible ticks during the animation
+    const totalSteps = 48; // more, smaller steps = smoother-looking progression
     const stepMinutes = minutes / totalSteps;
     let step = 0;
     const myGen = Router.generation();
@@ -55,7 +55,7 @@
         AppState.set('phone.time', endTime); // land exactly on the target, no rounding drift
         setTimeout(finish, 500); // brief pause on the final time before cutting away
       }
-    }, 90);
+    }, 55);
 
     function finish() {
       if (Router.generation() !== myGen) return;

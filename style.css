@@ -130,6 +130,15 @@ button{ font-family:inherit; cursor:pointer; }
 .timeskip-clock{
   font-family:var(--font-mono); font-size:52px; font-weight:700; color:var(--signal);
   letter-spacing:2px; text-shadow:0 0 18px rgba(76,224,210,.45);
+  font-variant-numeric: tabular-nums; /* keeps every digit the same advance width */
+  font-feature-settings: "tnum" 1, "lnum" 1; /* fallback for browsers ignoring the property above */
+  width:230px; text-align:center; /* fixed box so the text can't nudge the centered block left/right */
+  animation: clockTick .45s steps(1) infinite;
+}
+@keyframes clockTick{
+  0%, 85% { opacity:1; }
+  92% { opacity:.72; }
+  100% { opacity:1; }
 }
 .timeskip-label{
   font-family:var(--font-mono); font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--dim);
