@@ -33,7 +33,6 @@
   function render(root, params) {
     const minutes = (params && params.minutes) || 60;
     const startTime = AppState.get().phone.time;
-    const endTime = startTime + minutes;
 
     root.innerHTML = `
       <div class="app-screen timeskip-screen">
@@ -46,19 +45,25 @@
     const totalSteps = 48; // more, smaller steps = smoother-looking progression
     const stepMinutes = minutes / totalSteps;
     let step = 0;
+    let tickedSoFar = 0; // tracks cumulative minutes already sent to AppState.tick(),
+                          // so per-step rounding never drifts from the exact total
     const myGen = Router.generation();
 
     const tick = setInterval(() => {
       if (Router.generation() !== myGen) { clearInterval(tick); return; } // navigated away mid-animation
 
       step++;
-      const current = Math.min(startTime + stepMinutes * step, endTime);
-      AppState.set('phone.time', Math.round(current));
-      clockEl.textContent = fmt(current);
+      const isLast = step >= totalSteps;
+      const targetCumulative = isLast ? minutes : Math.round(stepMinutes * step);
+      const delta = targetCumulative - tickedSoFar;
+      if (delta > 0) {
+        AppState.tick(delta); // canonical advance — updates phone.time AND meta.day together
+        tickedSoFar += delta;
+      }
+      clockEl.textContent = fmt(AppState.get().phone.time);
 
-      if (step >= totalSteps) {
+      if (isLast) {
         clearInterval(tick);
-        AppState.set('phone.time', endTime); // land exactly on the target, no rounding drift
         setTimeout(finish, 500); // brief pause on the final time before cutting away
       }
     }, 55);

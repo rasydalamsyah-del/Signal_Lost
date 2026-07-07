@@ -25,6 +25,16 @@
     return false;
   }
 
+  // in-game clock timestamp for a chat bubble — NOT the real device
+  // clock. Keeps message times consistent with the fictional,
+  // ambient-ticking clock (see core/state.js AppState.tick() and
+  // RANCANGAN_MULTI_KARAKTER.md §2).
+  function pad2(n) { return n.toString().padStart(2, '0'); }
+  function gameTimeStamp() {
+    const t = AppState.get().phone.time;
+    return pad2(Math.floor(t / 60)) + ':' + pad2(t % 60);
+  }
+
   function renderList(root) {
     const s = AppState.get();
     const chatIds = Object.keys(s.chats);
@@ -167,7 +177,8 @@
     }
 
     function pickChoice(choice) {
-      const time = new Date().toTimeString().slice(0, 5);
+      AppState.tick(1); // sending something moves the ambient clock forward a bit
+      const time = gameTimeStamp();
       chat.messages.push({ from: 'me', text: Story.resolveText(choice.label), time });
       paint();
       Story.runEffects(chatId, choice.effects);
@@ -185,7 +196,8 @@
       setTimeout(() => {
         if (!stillHere()) return;
         isTyping = false;
-        const time = new Date().toTimeString().slice(0, 5);
+        AppState.tick(1); // a reply arriving moves the ambient clock forward a bit
+        const time = gameTimeStamp();
         chat.messages.push({ from: 'them', text: Story.resolveText(lines[startIdx]), time });
         Story.bumpRevealed(chatId);
         paint();
@@ -299,7 +311,8 @@
       if (!pendingInput) return; // box is only "live" while a node is asking for input
       const text = inputEl.value.trim();
       if (!text) return;
-      const time = new Date().toTimeString().slice(0, 5);
+      AppState.tick(1); // sending something moves the ambient clock forward a bit
+      const time = gameTimeStamp();
       chat.messages.push({ from: 'me', text, time });
       inputEl.value = '';
       paint();

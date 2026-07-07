@@ -241,7 +241,33 @@ meta: { day: 1, ambientTick: 0 } // day naik otomatis dari ambientTick
   headless (`AppState.get()` menghasilkan struktur yang benar, rivals
   benar, token resolver benar termasuk fallback token lama).
 
-### ⏭️ Langkah 2 — Waktu ambient (belum dikerjakan)
+### ✅ Langkah 2 — Waktu ambient (selesai)
+- **`core/state.js`**: tambah `AppState.tick(minutes)` — cara kanonik
+  menambah waktu in-game. `meta.ambientTick` jadi running-total menit
+  sejak awal hari 1 (mulai di 810, sama kayak `phone.time` default
+  lama); `phone.time` dan `meta.day` selalu jadi cermin langsungnya
+  (`phone.time = ambientTick % 1440`, `day = floor(ambientTick/1440)+1`).
+  Guard divalidasi ketat (`Number.isFinite`) — sempat ada bug di mana
+  `NaN` lolos validasi awal (`NaN <= 0` selalu `false`) dan bikin
+  `ambientTick` rusak permanen; sudah diperbaiki & dites ulang.
+- **`screens/timeSkip.js`**: animasi cutscene sekarang manggil
+  `AppState.tick(delta)` per step (bukan `AppState.set('phone.time', ...)`
+  langsung), dengan penjagaan `tickedSoFar` supaya total yang di-tick
+  presisi sama dengan target menit — jadi `meta.day` ikut naik dengan
+  benar kalau cutscene melewati tengah malam, gak cuma `phone.time`
+  yang wrap doang kayak sebelumnya.
+- **`core/router.js`**: `navigate()` sekarang tick +2 menit tiap pindah
+  ke app/screen baru (skip system screens biar intro gak makan waktu).
+- **`apps/dashchat.js`**: pesan (baik pilihan, input bebas, maupun
+  balasan otomatis) sekarang tick +1 menit dan pakai stempel waktu
+  **jam in-game** (`gameTimeStamp()`), bukan lagi `new Date()` device
+  asli seperti sebelumnya — jadi timestamp bubble chat konsisten sama
+  jam fiksi di status bar.
+- Sudah divalidasi: `node --check` semua file lolos, simulasi headless
+  `tick()` dites untuk tick biasa, rollover hari (termasuk lewat
+  tengah malam di tengah cutscene 48-step), dan guard input tidak
+  valid (0/negatif/NaN/Infinity/string).
+
 ### ⏭️ Langkah 3 — Engine efek (belum dikerjakan)
 ### ⏭️ Langkah 4 — Settings lanjutan (belum dikerjakan — bagian dasar sudah di Langkah 1)
 ### ⏭️ Langkah 5 — App "Diri" (belum dikerjakan)

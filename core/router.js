@@ -53,6 +53,12 @@ const Router = (function () {
     }
     history.push({ id, params });
 
+    // opening a new screen/app is itself an action that lets a little
+    // ambient time pass — see AppState.tick() / RANCANGAN_MULTI_KARAKTER.md §2.
+    // Skipped for system screens (boot/lock/start) so the intro sequence
+    // doesn't burn in-game minutes before the player has even started.
+    if (typeof AppState !== 'undefined' && !CHROMELESS.has(id)) AppState.tick(2);
+
     // track as a "recent app" (skip system screens)
     if (!CHROMELESS.has(id) && id !== 'home' && id !== 'recent') {
       recentApps = recentApps.filter(a => a.id !== id);

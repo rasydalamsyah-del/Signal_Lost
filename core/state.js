@@ -57,9 +57,8 @@ const AppState = (function () {
     return {
       meta: {
         day: 1,
-        ambientTick: 0,   // running minute-total; every 1440 rolls `day` forward.
-                          // Advanced by story/app actions, not a real-time clock —
-                          // see RANCANGAN_MULTI_KARAKTER.md §2 (waktu ambient).
+        ambientTick: 810, // matches phone.time's starting value below (810 = 13:30);
+                          // every 1440 minutes rolls `day` forward — see AppState.tick()
         createdAt: null
       },
       phone: {
@@ -189,6 +188,22 @@ const AppState = (function () {
     touch() { notify(); },
     reset() { data = defaultData(); notify(); },
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
+
+    // ---- ambient game time (see RANCANGAN_MULTI_KARAKTER.md §2) ----
+    // The canonical way to advance in-game time. `meta.ambientTick` is
+    // a running total of in-game minutes since the start of day 1;
+    // `phone.time` and `meta.day` are always kept as a live mirror of
+    // it, so anything reading either one directly (statusBar, dashchat
+    // neglect-scoring, etc.) stays consistent no matter what caused the
+    // advance — a screen change, a sent message, or a cutscene like
+    // screens/timeSkip.js fast-forwarding many minutes at once.
+    tick(minutes) {
+      if (typeof minutes !== 'number' || !Number.isFinite(minutes) || minutes <= 0) return;
+      data.meta.ambientTick += minutes;
+      data.phone.time = data.meta.ambientTick % 1440;
+      data.meta.day = Math.floor(data.meta.ambientTick / 1440) + 1;
+      notify();
+    },
 
     // replace every {{token}} in a string with the matching profile
     // name, a resolved character name (e.g. {{char_nadia}}), or leave
