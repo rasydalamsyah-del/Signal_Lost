@@ -54,15 +54,10 @@
           <p class="settings-hint">Kalau dinyalakan, obrolan yang cuma punya satu pilihan jawaban akan lanjut sendiri tanpa perlu diketuk.</p>
 
           <div class="settings-section-title">Profil Cerita</div>
-          <p class="settings-hint">Nama-nama ini dipakai di dalam obrolan dan nama kontak — ganti kapan saja.</p>
+          <p class="settings-hint">Cuma identitas kamu sendiri yang diisi manual — nama-nama lain di cerita sudah ditentukan (lihat 10 karakter di kontak).</p>
           ${textRow('Nama kamu', 'profile.user.name', 'Nama kamu')}
-          ${textRow('Nama pasangan', 'profile.partner.name', 'Nama pasangan')}
-          ${textRow('Sahabat kamu', 'profile.userFriend.name', 'Nama sahabatmu')}
-          ${textRow('Sahabat pasangan', 'profile.partnerFriend.name', 'Nama sahabat pasangan')}
           ${textRow('Ibu kamu', 'profile.userMom.name', 'Nama ibu kamu')}
           ${textRow('Ayah kamu', 'profile.userDad.name', 'Nama ayah kamu')}
-          ${textRow('Ibu pasangan', 'profile.partnerMom.name', 'Nama ibu pasangan')}
-          ${textRow('Ayah pasangan', 'profile.partnerDad.name', 'Nama ayah pasangan')}
 
           <div style="margin-top:24px">
             <button class="btn btn-danger" id="btn-reset" style="width:100%">Hapus semua data</button>

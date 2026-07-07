@@ -204,3 +204,47 @@ meta: { day: 1, ambientTick: 0 } // day naik otomatis dari ambientTick
   untuk 10 karakter (biar konten gak meledak — lihat §1)
 - UI list 10 karakter — grid atau list, dan bagaimana progress
   unlock ditampilkan visual (blur, ikon gembok, dll)
+
+---
+
+## 9. Log progres implementasi
+
+### ✅ Langkah 1 — Fondasi data (selesai)
+- **`core/characters.js`** (baru): registry statis 10 karakter (5
+  perempuan: Nadia, Kirana, Salsa, Bella, Intan — 5 laki-laki: Bagas,
+  Raka, Fahri, Dimas, Aldo), masing-masing nama/gender/avatar/job
+  tertanam. `getRivals(id)` default ke semua karakter sesama gender
+  kecuali di-override manual lewat `rivals: [...]` di registry.
+- **`core/state.js`**: `profile` dipangkas jadi 3 field
+  (`user`/`userMom`/`userDad`). Tambah `characters` (runtime state 10
+  karakter, dibangun dari registry — stats, identity, identityUnlocked,
+  story progress sendiri-sendiri, lastInteractedDay buat neglect
+  score). Tambah `selfStats` (happiness/sadness/jealousy/money) dan
+  `selfIdentity` (pekerjaan/citaCita/hobi/pasangan, mulai `null`).
+  Tambah `meta.ambientTick` (basis buat waktu ambient, belum
+  benar-benar jalan — itu Langkah 2). `TOKENS` disederhanakan;
+  `{{char_xxx}}` sekarang resolve otomatis ke nama karakter dari
+  registry; token lama yang datanya sudah dihapus (`{{partner}}` dkk)
+  sengaja dibiarkan tampil literal, bukan crash.
+- **`apps/settings.js`**: form Profil Cerita dipangkas jadi 3 field
+  sesuai di atas.
+- **`core/story.js`**: tutorial Asisten dipangkas dari 8 pertanyaan
+  nama jadi 3 (user/ibu/ayah). Handoff `a_farewell` **tidak lagi**
+  memunculkan kontak "partner" generik tunggal (itu digantikan sistem
+  10 karakter). Seluruh thread `partner`/`friend` lama ditandai
+  **DEPRECATED/inert** di komentar kode — masih ada di file (siapa
+  tau ada baris yang mau dipakai ulang), tapi tidak lagi terhubung ke
+  mana pun, jadi tidak jalan dan tidak crash.
+- **`index.html`**: tambah `<script src="core/characters.js">` sebelum
+  `core/state.js`.
+- Sudah divalidasi: semua file `node --check` lolos, dan disimulasikan
+  headless (`AppState.get()` menghasilkan struktur yang benar, rivals
+  benar, token resolver benar termasuk fallback token lama).
+
+### ⏭️ Langkah 2 — Waktu ambient (belum dikerjakan)
+### ⏭️ Langkah 3 — Engine efek (belum dikerjakan)
+### ⏭️ Langkah 4 — Settings lanjutan (belum dikerjakan — bagian dasar sudah di Langkah 1)
+### ⏭️ Langkah 5 — App "Diri" (belum dikerjakan)
+### ⏭️ Langkah 6 — Contacts & DashChat wiring ke 10 karakter (belum dikerjakan — termasuk migrasi konten lama)
+### ⏭️ Langkah 7 — Job system (belum dikerjakan)
+### ⏭️ Langkah 8 — Konten penuh per karakter (belum dikerjakan)

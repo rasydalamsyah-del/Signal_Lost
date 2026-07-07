@@ -86,15 +86,15 @@ const Story = (function () {
 
       // gate: kalau player udah isi semua nama di Pengaturan sebelum buka chat
       // ini, skip seluruh sesi tanya-nama dan langsung ke demo pilihan.
+      // (Dipangkas jadi 3 field saja setelah redesign multi-karakter —
+      // lihat RANCANGAN_MULTI_KARAKTER.md §6. Field lain dulu di sini
+      // sudah dihapus dari profile.)
       a_profile_gate: {
         lines: [],
         skipTo: {
           when: 'allFilled',
           paths: [
-            'profile.user.name', 'profile.partner.name',
-            'profile.userFriend.name', 'profile.partnerFriend.name',
-            'profile.userMom.name', 'profile.userDad.name',
-            'profile.partnerMom.name', 'profile.partnerDad.name'
+            'profile.user.name', 'profile.userMom.name', 'profile.userDad.name'
           ],
           next: 'a_profile_prefilled'
         },
@@ -114,25 +114,7 @@ const Story = (function () {
         lines: ['btw aku lupa nanya, nama kamu siapa?'],
         input: { placeholder: 'Ketik nama kamu...', savesTo: 'profile.user.name', next: 'a_ack_user_name' }
       },
-      a_ack_user_name: { lines: ['oh, {{user}}. oke.'], next: 'a_ask_partner_name' },
-
-      a_ask_partner_name: {
-        lines: ['terus... orang yang paling penting buat kamu sekarang ini, siapa namanya?'],
-        input: { placeholder: 'Nama dia...', savesTo: 'profile.partner.name', next: 'a_ack_partner_name' }
-      },
-      a_ack_partner_name: { lines: ['{{partner}}, ya udah. aku inget itu.'], next: 'a_ask_user_friend' },
-
-      a_ask_user_friend: {
-        lines: ['sahabat paling deket kamu siapa?'],
-        input: { placeholder: 'Nama sahabatmu...', savesTo: 'profile.userFriend.name', next: 'a_ack_user_friend' }
-      },
-      a_ack_user_friend: { lines: ['{{userFriend}}, noted.'], next: 'a_ask_partner_friend' },
-
-      a_ask_partner_friend: {
-        lines: ['kalo sahabat deketnya {{partner}}, siapa?'],
-        input: { placeholder: 'Nama sahabat pasanganmu...', savesTo: 'profile.partnerFriend.name', next: 'a_ack_partner_friend' }
-      },
-      a_ack_partner_friend: { lines: ['{{partnerFriend}}. oke, dicatat.'], next: 'a_ask_user_mom' },
+      a_ack_user_name: { lines: ['oh, {{user}}. oke.'], next: 'a_ask_user_mom' },
 
       a_ask_user_mom: {
         lines: ['nama ibu kamu?'],
@@ -144,19 +126,7 @@ const Story = (function () {
         lines: ['nama ayah kamu?'],
         input: { placeholder: 'Nama ayah kamu...', savesTo: 'profile.userDad.name', next: 'a_ack_user_dad' }
       },
-      a_ack_user_dad: { lines: ['{{userDad}}. sip.'], next: 'a_ask_partner_mom' },
-
-      a_ask_partner_mom: {
-        lines: ['nama ibunya {{partner}}?'],
-        input: { placeholder: 'Nama ibu pasanganmu...', savesTo: 'profile.partnerMom.name', next: 'a_ack_partner_mom' }
-      },
-      a_ack_partner_mom: { lines: ['{{partnerMom}}, oke.'], next: 'a_ask_partner_dad' },
-
-      a_ask_partner_dad: {
-        lines: ['terakhir — ayahnya {{partner}}, siapa?'],
-        input: { placeholder: 'Nama ayah pasanganmu...', savesTo: 'profile.partnerDad.name', next: 'a_ack_partner_dad' }
-      },
-      a_ack_partner_dad: { lines: ['{{partnerDad}}. oke, semuanya udah aku catet.'], next: 'a_demo_choice' },
+      a_ack_user_dad: { lines: ['{{userDad}}. sip, semuanya udah aku catet.'], next: 'a_demo_choice' },
 
       // ---- real branching demo: three genuinely different replies ----
       a_demo_choice: {
@@ -183,29 +153,37 @@ const Story = (function () {
         choices: [ { label: 'Oke, ngerti.', next: 'a_farewell' } ]
       },
 
-      // ---- handoff: assistant disappears, partner contact appears ----
+      // ---- handoff: assistant disappears. It used to also spawn a
+      // single generic "partner" mystery contact right here — that's
+      // now superseded by the 10-character system (core/characters.js).
+      // Wiring the 10 characters into Contacts/DashChat is a later
+      // build step (see RANCANGAN_MULTI_KARAKTER.md §1), so for now
+      // the handoff just ends cleanly without spawning anything, to
+      // avoid leaving a broken contact that still says "{{partner}}"
+      // literally on screen.
       a_farewell: {
         lines: [
           'oke {{user}}, kayaknya itu doang yang perlu kamu tau buat sekarang.',
           'aku bakal ilang dari kontak setelah ini — biasanya emang gitu, jangan kaget ya.',
-          'tapi bentar lagi bakal ada nomor baru yang masuk.',
+          'bakal ada beberapa nomor baru yang muncul di kontak kamu nanti.',
           'hati-hati aja sama sinyal di hp ini.'
         ],
         effects: [
-          { type: 'endThread', threadId: 'assistant' },
-          { type: 'spawnThread', threadId: 'partner', contactId: 'partner', name: '???', avatar: '?', startNode: 'p_start' },
-          { type: 'notify', title: '??? ', body: 'Ada pesan baru masuk...', chatId: 'partner' }
+          { type: 'endThread', threadId: 'assistant' }
         ]
       }
     },
 
     // ---------------------------------------------------------
-    // PARTNER — the mystery contact "???" that replaces Asisten.
-    // Starter arc: establishes dread/intrigue, gives the player
-    // a couple of genuinely different branches, then reveals the
-    // contact's real name (pulled from profile.partner.name) and
-    // stops on a cliffhanger — this is where future content picks
-    // up, see CHANGES.md.
+    // DEPRECATED — old single-generic-partner mystery arc ("???").
+    // Kept here only as reference/reusable lines while the 10-character
+    // system is built; nothing currently spawns this thread (see
+    // a_farewell above), so it's inert. Do NOT wire this back up as-is:
+    // it reads {{partner}}/{{userFriend}} tokens that no longer exist
+    // now that names are baked into core/characters.js instead of a
+    // single generic profile.partner slot. Superseded by
+    // RANCANGAN_MULTI_KARAKTER.md — will be rewritten per-character
+    // in a later content step, not reactivated wholesale.
     // ---------------------------------------------------------
     partner: {
       p_start: {

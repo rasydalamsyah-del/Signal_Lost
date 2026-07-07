@@ -5,21 +5,61 @@
    survives navigation between apps. Persisted to localStorage
    via the Storage app.
 
-   `profile` holds every real-world name the story can reference
-   (via {{token}} placeholders resolved by AppState.resolveText).
+   MULTI-CHARACTER REDESIGN (2026-07, see RANCANGAN_MULTI_KARAKTER.md):
+   `profile` is now just the 3 things the player types in manually
+   (their own name + their parents' names). The 10 other characters
+   have fixed/baked-in names — see core/characters.js — so their
+   runtime state (stats, revealed identity fields, story progress)
+   lives under `characters`, built fresh from that registry below.
+
+   `selfStats`/`selfIdentity` hold the player's OWN mood stats and
+   biographical facts (job, dream, hobby, partner) — the latter start
+   `null` and fill in gradually via story effects, not manual entry.
+
+   NOTE ON OLD CONTENT: core/story.js still has the old linear
+   assistant → partner → friend tutorial script, which references
+   profile keys removed here ({{partner}}, {{userFriend}}, etc). Those
+   tokens will simply render literally (unresolved) until that content
+   is migrated into the 10-character system (planned for later steps —
+   see RANCANGAN_MULTI_KARAKTER.md §1 build order). This does not
+   crash anything; resolveText() falls back to leaving `{{x}}` as-is
+   when a token has no resolver.
+
    `story.threads` holds, per DashChat conversation, which node
    of core/story.js it's currently on and how far a node has been
    "typed out" — so re-opening a chat resumes correctly instead of
-   replaying lines that already happened.
+   replaying lines that already happened. (The old `assistant` thread
+   keeps using this shape; each of the 10 characters carries its own
+   equivalent `story` sub-object of its own instead, see below.)
    ============================================================ */
 
 const AppState = (function () {
+
+  // ---- build the runtime slice for all 10 baked-in characters from
+  // the static registry in core/characters.js. Called fresh by
+  // defaultData() so every new game starts everyone at 0/unrevealed. ----
+  function buildCharacterState() {
+    const out = {};
+    allCharacterIds().forEach(id => {
+      out[id] = {
+        stats: { love: 0, trust: 0, jealousy: 0, mood: 50 },
+        identity: { pekerjaan: null, hobi: null, citaCita: null },
+        identityUnlocked: [], // which of the fields above the player has "seen" so far
+        story: { nodeId: id + '_start', ended: false, revealedCount: 0, awaiting: null, effectsRan: false },
+        lastInteractedDay: null // in-game `meta.day` of the last message exchanged, for neglect scoring
+      };
+    });
+    return out;
+  }
 
   // ---- default game data. Edit this to write your own story. ----
   function defaultData() {
     return {
       meta: {
         day: 1,
+        ambientTick: 0,   // running minute-total; every 1440 rolls `day` forward.
+                          // Advanced by story/app actions, not a real-time clock —
+                          // see RANCANGAN_MULTI_KARAKTER.md §2 (waktu ambient).
         createdAt: null
       },
       phone: {
@@ -27,26 +67,43 @@ const AppState = (function () {
         battery: 78,      // 0-100
         time: 810         // in-game clock, minutes since midnight (810 = 13:30).
                           // Fictional — independent of the real device clock.
-                          // Only story beats (like a time-skip cutscene) move it.
+                          // Now advances via ambientTick (see meta above),
+                          // not only via one-off cutscenes.
       },
 
-      // ---- story profile: every name the story can reference ----
-      // Edit these anytime in Pengaturan > Profil Cerita; every place
-      // that shows a {{token}} (chat bubbles, contact names, notifs)
-      // re-reads from here.
+      // ---- story profile: the only 3 things the player fills in
+      // manually (Pengaturan > Profil Cerita). Everyone else's name
+      // is fixed story data — see core/characters.js. ----
       profile: {
-        user:          { name: '' }, // {{user}}
-        partner:       { name: '' }, // {{partner}}
-        userFriend:    { name: '' }, // {{userFriend}}
-        partnerFriend: { name: '' }, // {{partnerFriend}}
-        userMom:       { name: '' }, // {{userMom}}
-        userDad:       { name: '' }, // {{userDad}}
-        partnerMom:    { name: '' }, // {{partnerMom}}
-        partnerDad:    { name: '' }  // {{partnerDad}}
+        user:    { name: '' }, // {{user}}
+        userMom: { name: '' }, // {{userMom}}
+        userDad: { name: '' }  // {{userDad}}
       },
 
-      // ---- story progress, one entry per DashChat thread that has
-      // a script attached (see core/story.js). ----
+      // ---- the player's own mood stats (not tied to any one
+      // character) and biographical identity (starts unknown, fills
+      // in from story effects as the game progresses). ----
+      selfStats: {
+        happiness: 60, // kesenangan
+        sadness: 20,   // kesedihan
+        jealousy: 10,  // cemburu (milik user sendiri, beda dari jealousy per-karakter)
+        money: 150000  // keuangan, dari mini-job & efek cerita
+      },
+      selfIdentity: {
+        pekerjaan: null,
+        citaCita: null,
+        hobi: null,
+        pasangan: null // diisi otomatis dengan id karakter (mis. 'char_nadia') saat "committed"
+      },
+
+      // ---- runtime state for the 10 baked-in characters, see
+      // buildCharacterState() above and core/characters.js ----
+      characters: buildCharacterState(),
+
+      // ---- story progress for scripted threads that aren't one of
+      // the 10 characters (currently just the old assistant tutorial).
+      // Each of the 10 characters carries its own equivalent shape
+      // inside characters[id].story instead of here. ----
       story: {
         threads: {
           assistant: { nodeId: 'a_start', ended: false, revealedCount: 0, awaiting: null, effectsRan: false }
@@ -55,6 +112,9 @@ const AppState = (function () {
 
       contacts: [
         { id: 'assistant', name: 'Asisten', avatar: 'A', lastUpdate: '', isNew: true }
+        // the 10 characters get added here once Contacts/DashChat are
+        // wired up to characters.js (see RANCANGAN_MULTI_KARAKTER.md §1,
+        // build-order step "Contacts & DashChat")
       ],
       chats: {
         // chatId: { name, messages: [{from:'me'|'them', text, time}] }
@@ -94,15 +154,25 @@ const AppState = (function () {
   // that needs to print a name the player supplied. Falls back to a
   // generic word so half-filled profiles never show a literal "undefined". ----
   const TOKENS = {
-    user:          () => data.profile.user.name || 'Kamu',
-    partner:       () => data.profile.partner.name || 'dia',
-    userFriend:    () => data.profile.userFriend.name || 'sahabatmu',
-    partnerFriend: () => data.profile.partnerFriend.name || 'sahabatnya',
-    userMom:       () => data.profile.userMom.name || 'ibumu',
-    userDad:       () => data.profile.userDad.name || 'ayahmu',
-    partnerMom:    () => data.profile.partnerMom.name || 'ibunya',
-    partnerDad:    () => data.profile.partnerDad.name || 'ayahnya'
+    user:    () => data.profile.user.name || 'Kamu',
+    userMom: () => data.profile.userMom.name || 'ibumu',
+    userDad: () => data.profile.userDad.name || 'ayahmu',
+    // resolves to whichever of the 10 characters has become the
+    // player's partner (selfIdentity.pasangan), or a vague fallback
+    // before that's decided — see RANCANGAN_MULTI_KARAKTER.md §6
+    partnerName: () => {
+      const pid = data.selfIdentity.pasangan;
+      return (pid && CHARACTERS[pid]) ? CHARACTERS[pid].name : 'seseorang';
+    }
   };
+
+  // Any {{char_xxx}} token resolves directly to that character's
+  // fixed name from the registry (rarely needed since dialogue can
+  // just write the name directly, but handy for shared/templated lines
+  // reused across characters).
+  function resolveCharToken(key) {
+    return CHARACTERS[key] ? CHARACTERS[key].name : null;
+  }
 
   return {
     get() { return data; },
@@ -120,12 +190,19 @@ const AppState = (function () {
     reset() { data = defaultData(); notify(); },
     subscribe(fn) { listeners.add(fn); return () => listeners.delete(fn); },
 
-    // replace every {{token}} in a string with the matching profile name
+    // replace every {{token}} in a string with the matching profile
+    // name, a resolved character name (e.g. {{char_nadia}}), or leave
+    // it as literal text if neither resolver recognizes the key (this
+    // is the deliberate fallback for old content referencing removed
+    // tokens like {{partner}}/{{userFriend}} — see header note above).
     resolveText(str) {
       if (!str) return str;
       return str.replace(/\{\{(\w+)\}\}/g, (match, key) => {
         const fn = TOKENS[key];
-        return fn ? fn() : match;
+        if (fn) return fn();
+        const charName = resolveCharToken(key);
+        if (charName) return charName;
+        return match;
       });
     },
 
