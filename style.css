@@ -511,6 +511,61 @@ button{ font-family:inherit; cursor:pointer; }
 .save-slot-info .save-slot-title{ font-weight:600; font-size:13px; }
 .save-slot-info .save-slot-time{ font-size:11px; color:var(--dim); margin-top:2px; font-family:var(--font-mono); }
 
+/* ---- Diri app (RANCANGAN_MULTI_KARAKTER.md §6) ---- */
+.diri-tabs{ display:flex; gap:6px; padding:10px 20px 0; flex:0 0 auto; }
+.diri-tab{
+  flex:1; padding:9px 0; text-align:center; font-size:12.5px; font-weight:600;
+  font-family:var(--font-mono); letter-spacing:.3px; color:var(--dim);
+  background:var(--static); border:1px solid var(--hairline); border-radius:10px;
+  transition:all .15s;
+}
+.diri-tab.active{ background:rgba(76,224,210,0.16); border-color:var(--signal); color:var(--signal); }
+
+.diri-hint{ font-size:11.5px; color:var(--dim); line-height:1.5; margin-bottom:10px; }
+
+.diri-stat-row{ display:flex; align-items:center; gap:10px; padding:7px 0; }
+.diri-stat-label{ width:80px; flex:0 0 auto; font-size:12px; color:var(--ghost); }
+.diri-stat-num{ width:28px; flex:0 0 auto; text-align:right; font-size:11px; font-family:var(--font-mono); color:var(--dim); }
+.diri-bar{ flex:1 1 auto; height:8px; border-radius:5px; background:var(--static-2); overflow:hidden; }
+.diri-bar-fill{ height:100%; border-radius:5px; background:var(--signal); transition:width .3s var(--ease-out); }
+.diri-bar-fill.diri-bar-warn{ background:var(--interference); }
+.diri-bar-fill.diri-bar-love{ background:var(--interference); }
+.diri-bar-fill.diri-bar-trust{ background:var(--signal); }
+.diri-money{ margin-left:auto; font-family:var(--font-mono); font-size:13px; color:var(--signal); font-weight:700; }
+
+.diri-char-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.diri-char-card{ background:var(--static); border:1px solid var(--hairline); border-radius:14px; padding:12px; }
+.diri-char-head{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
+.diri-char-avatar{
+  width:26px; height:26px; border-radius:8px; background:var(--static-2); color:var(--ghost);
+  display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; flex:0 0 auto;
+}
+.diri-char-name{ font-size:12.5px; font-weight:600; }
+.diri-char-card .diri-stat-label{ width:38px; font-size:10.5px; color:var(--dim); }
+.diri-char-card .diri-stat-num{ width:22px; font-size:10px; }
+
+.diri-char-list{ display:flex; flex-direction:column; gap:8px; }
+.diri-char-list-item{
+  display:flex; align-items:center; gap:10px; padding:10px 12px; background:var(--static);
+  border:1px solid var(--hairline); border-radius:12px; text-align:left; width:100%;
+}
+.diri-char-list-item:disabled{ opacity:.5; }
+.diri-char-list-name{ font-size:13px; font-weight:600; flex:1 1 auto; }
+.diri-char-list-meta{ font-size:11px; color:var(--dim); font-family:var(--font-mono); display:flex; align-items:center; gap:4px; }
+.diri-char-list-meta svg{ width:13px; height:13px; }
+
+.diri-id-row{ display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--hairline); }
+.diri-id-label{ font-size:12px; color:var(--dim); font-family:var(--font-mono); }
+.diri-id-value{ font-size:13px; font-weight:600; text-align:right; }
+.diri-id-value.diri-id-locked{ color:var(--dim); font-weight:400; display:flex; align-items:center; gap:5px; }
+.diri-id-value.diri-id-locked svg{ width:13px; height:13px; }
+
+.diri-back-btn{
+  display:flex; align-items:center; gap:6px; background:none; border:none; color:var(--signal);
+  font-size:12.5px; font-weight:600; padding:0 0 14px; font-family:var(--font-mono);
+}
+.diri-back-btn svg{ width:16px; height:16px; }
+
 @media (prefers-reduced-motion: reduce){
   *{ animation-duration:0.01ms !important; animation-iteration-count:1 !important; transition-duration:0.01ms !important; }
 }

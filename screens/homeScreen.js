@@ -16,6 +16,7 @@
     { id: 'myshop', label: 'MyShop' },
     { id: 'location', label: 'Location' },
     { id: 'calendar', label: 'Kalender' },
+    { id: 'diri', label: 'Diri' },
     { id: 'settings', label: 'Pengaturan' }
   ];
 

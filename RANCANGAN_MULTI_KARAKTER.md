@@ -306,8 +306,45 @@ meta: { day: 1, ambientTick: 0 } // day naik otomatis dari ambientTick
   anti-dupe, neglect 0 sebelum kontak, neglect naik seiring hari &
   rasio perhatian, no-op buat thread non-karakter).
 
-### ⏭️ Langkah 4 — Settings lanjutan (belum dikerjakan — bagian dasar sudah di Langkah 1)
-### ⏭️ Langkah 5 — App "Diri" (belum dikerjakan)
+### ✅ Langkah 4 — Settings lanjutan (selesai — sudah tercakup di Langkah 1)
+Dicek ulang `apps/settings.js`: form "Profil Cerita" sudah 3 field
+sesuai rancangan §6, toggle "Lanjut Otomatis" dari fitur lama masih
+relevan/jalan. Rancangan tidak meminta setting baru lain di luar itu,
+jadi tidak ada kerjaan tambahan — lanjut ke Langkah 5.
+
+### ✅ Langkah 5 — App "Diri" (selesai)
+- **`apps/diri.js`** (baru) — 2 tab:
+  - **Status**: bar kesenangan/kesedihan/cemburu milik user (dari
+    `selfStats`), keuangan sebagai nominal, dan grid 10 kartu karakter
+    (bar Love + Trust per karakter dari `characters[id].stats`). Nama
+    karakter yang belum pernah dikontak (`lastInteractedDay === null`)
+    tampil `???`, bukan nama aslinya.
+  - **Identitas**: bio user (`selfIdentity` — pekerjaan/hobi/cita-cita/
+    pasangan), tampil `???` kalau masih `null`; plus list 10 karakter
+    yang bisa diklik buat lihat detail identitas versi mereka —
+    tombolnya disabled kalau belum pernah dikontak, dan field yang
+    belum ada di `identityUnlocked` tampil terkunci (ikon gembok),
+    field yang sudah di-reveal tampil isinya. Ada tombol "Kembali".
+- **`assets/icons.js`**: tambah ikon `diri` (circle-user, buat home
+  grid) dan `lock` (buat field identitas yang masih terkunci), plus
+  warna gradient `diri` sendiri.
+- **`screens/homeScreen.js`**: tambah entry app `diri` di grid.
+- **`style.css`**: tambah semua class baru (`.diri-tabs`, `.diri-bar`,
+  `.diri-char-card`, `.diri-id-row`, dll), pakai token warna yang udah
+  ada (`--signal`, `--interference`, `--static`, dll) biar konsisten
+  sama gaya app lain.
+- App ini murni **read-only viewer** — belum ada cara isi data manual;
+  semua angka/field berubah lewat efek cerita yang udah dibangun di
+  Langkah 3 (`adjustStat`/`revealIdentity`). Wajar kalau semuanya masih
+  `???`/0 sekarang karena belum ada dialog yang benar-benar
+  memanggil efek itu (nunggu Langkah 6-8: wiring kontak + konten).
+- Sudah divalidasi: `node --check` semua file lolos + simulasi **DOM
+  penuh pakai jsdom** (bukan cuma logic doang) — render awal, ganti
+  tab, klik karakter yang locked (disabled) vs yang udah "ketemu",
+  detail field locked vs unlocked, tombol kembali, dan tab Status ikut
+  update live pas stat berubah. jsdom di-install sementara buat tes,
+  lalu dihapus lagi (`node_modules`/`package.json` gak ikut commit).
+
 ### ⏭️ Langkah 6 — Contacts & DashChat wiring ke 10 karakter (belum dikerjakan — termasuk migrasi konten lama)
 ### ⏭️ Langkah 7 — Job system (belum dikerjakan)
 ### ⏭️ Langkah 8 — Konten penuh per karakter (belum dikerjakan)
