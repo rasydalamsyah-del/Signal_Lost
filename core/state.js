@@ -46,7 +46,10 @@ const AppState = (function () {
         identity: { pekerjaan: null, hobi: null, citaCita: null },
         identityUnlocked: [], // which of the fields above the player has "seen" so far
         story: { nodeId: id + '_start', ended: false, revealedCount: 0, awaiting: null, effectsRan: false },
-        lastInteractedDay: null // in-game `meta.day` of the last message exchanged, for neglect scoring
+        lastInteractedDay: null, // in-game `meta.day` of the last message exchanged, for neglect scoring
+        messageCount: 0 // running total of messages sent to THIS character, for the
+                        // "attention ratio" half of the neglect score — see
+                        // Story.computeNeglect() in core/story.js
       };
     });
     return out;
@@ -98,6 +101,11 @@ const AppState = (function () {
       // ---- runtime state for the 10 baked-in characters, see
       // buildCharacterState() above and core/characters.js ----
       characters: buildCharacterState(),
+
+      // total messages sent to ANY of the 10 characters, ever — the
+      // denominator for each character's "attention ratio" half of the
+      // neglect score (see Story.computeNeglect() in core/story.js).
+      attention: { totalMessages: 0 },
 
       // ---- story progress for scripted threads that aren't one of
       // the 10 characters (currently just the old assistant tutorial).

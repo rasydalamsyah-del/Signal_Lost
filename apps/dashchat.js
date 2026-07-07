@@ -13,6 +13,9 @@
   // shared condition evaluator for node.skipTo — supports:
   //   { when:'allFilled', paths:[...], next }   — every profile path has a value
   //   { when:'flag', flag:'x', equals:true, next } — a story flag matches
+  //   { when:'neglect', charId:'char_x', gte:50, next } — that character's
+  //     neglect score (Story.computeNeglect) is at/above threshold —
+  //     see RANCANGAN_MULTI_KARAKTER.md §5
   function evalCondition(cond) {
     if (!cond) return false;
     if (cond.when === 'allFilled') {
@@ -21,6 +24,9 @@
     }
     if (cond.when === 'flag') {
       return AppState.get().flags[cond.flag] === cond.equals;
+    }
+    if (cond.when === 'neglect') {
+      return Story.computeNeglect(cond.charId) >= (cond.gte || 0);
     }
     return false;
   }
@@ -178,6 +184,7 @@
 
     function pickChoice(choice) {
       AppState.tick(1); // sending something moves the ambient clock forward a bit
+      Story.recordInteraction(chatId); // no-op unless chatId is one of the 10 characters
       const time = gameTimeStamp();
       chat.messages.push({ from: 'me', text: Story.resolveText(choice.label), time });
       paint();
@@ -312,6 +319,7 @@
       const text = inputEl.value.trim();
       if (!text) return;
       AppState.tick(1); // sending something moves the ambient clock forward a bit
+      Story.recordInteraction(chatId); // no-op unless chatId is one of the 10 characters
       const time = gameTimeStamp();
       chat.messages.push({ from: 'me', text, time });
       inputEl.value = '';

@@ -466,7 +466,8 @@ const Story = (function () {
           if (!ts || !chat) break;
           const node = STORY[fx.threadId] && STORY[fx.threadId][ts.nodeId];
           if (!node || !node.lines || !node.lines.length) break;
-          const time = new Date().toTimeString().slice(0, 5);
+          const t = s.phone.time; // in-game clock, not the real device clock
+          const time = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
           chat.messages.push({ from: 'them', text: resolveText(node.lines[0]), time });
           ts.revealedCount = 1;
           ts.awaiting = node.holdUntilTap ? 'tap' : null;
@@ -475,10 +476,129 @@ const Story = (function () {
           break;
         }
 
+        // ---- multi-character effects (RANCANGAN_MULTI_KARAKTER.md §3, §6) ----
+
+        // adjust one stat on one target — either a character
+        // (fx.target = a characters.js id, stat: love|trust|jealousy|mood)
+        // or the player themselves (fx.target = 'self', stat:
+        // happiness|sadness|jealousy|money). Clamped to 0-100, except
+        // 'money' which is uncapped (it's a nominal amount, not a gauge).
+        case 'adjustStat': {
+          const delta = fx.delta || 0;
+          if (fx.target === 'self') {
+            if (!(fx.stat in s.selfStats)) { console.warn('Story: unknown selfStats stat', fx.stat); break; }
+            const raw = s.selfStats[fx.stat] + delta;
+            s.selfStats[fx.stat] = fx.stat === 'money' ? raw : clamp01to100(raw);
+          } else {
+            const c = s.characters[fx.target];
+            if (!c) { console.warn('Story: unknown character target', fx.target); break; }
+            if (!(fx.stat in c.stats)) { console.warn('Story: unknown character stat', fx.stat); break; }
+            c.stats[fx.stat] = clamp01to100(c.stats[fx.stat] + delta);
+          }
+          break;
+        }
+
+        // ambient/threshold ripple: if `fx.source` character's OWN stat
+        // (fx.condition.stat) is at/above fx.condition.gte, nudge
+        // fx.targetStat by fx.delta on EVERY OTHER character. Meant for
+        // "everyone notices you and X are close" style ambient jealousy —
+        // small delta, applies broadly. See RANCANGAN_MULTI_KARAKTER.md §3.
+        case 'globalRipple': {
+          const source = s.characters[fx.source];
+          if (!source) { console.warn('Story: unknown ripple source', fx.source); break; }
+          const cond = fx.condition || {};
+          const meets = typeof cond.gte === 'number'
+            ? (source.stats[cond.stat] || 0) >= cond.gte
+            : true;
+          if (!meets) break;
+          allCharacterIds().forEach(id => {
+            if (id === fx.source) return;
+            const c = s.characters[id];
+            if (!(fx.targetStat in c.stats)) return;
+            c.stats[fx.targetStat] = clamp01to100(c.stats[fx.targetStat] + (fx.delta || 0));
+          });
+          break;
+        }
+
+        // focused rivalry ripple: nudges fx.targetStat by fx.delta only
+        // on fx.source's rivals (getRivals(), default same-gender —
+        // see core/characters.js), not everyone. Meant to be the
+        // sharper, more specific counterpart to globalRipple above,
+        // triggered when the player is visibly focusing attention on
+        // one character (see Story.computeNeglect()/attention ratio
+        // below for how "focus" gets measured).
+        case 'rivalRipple': {
+          if (!s.characters[fx.source]) { console.warn('Story: unknown rivalRipple source', fx.source); break; }
+          getRivals(fx.source).forEach(id => {
+            const c = s.characters[id];
+            if (!c || !(fx.targetStat in c.stats)) return;
+            c.stats[fx.targetStat] = clamp01to100(c.stats[fx.targetStat] + (fx.delta || 0));
+          });
+          break;
+        }
+
+        // reveal one biographical field — either the player's own
+        // (fx.target = 'self', writes to selfIdentity) or a character's
+        // (fx.target = a characters.js id, writes to
+        // characters[id].identity and marks it unlocked so the "Diri"
+        // app's character-browser can show it). See
+        // RANCANGAN_MULTI_KARAKTER.md §6.
+        case 'revealIdentity': {
+          const value = resolveText(fx.value);
+          if (fx.target === 'self') {
+            if (!(fx.field in s.selfIdentity)) { console.warn('Story: unknown selfIdentity field', fx.field); break; }
+            s.selfIdentity[fx.field] = value;
+          } else {
+            const c = s.characters[fx.target];
+            if (!c) { console.warn('Story: unknown identity target', fx.target); break; }
+            if (!(fx.field in c.identity)) { console.warn('Story: unknown identity field', fx.field); break; }
+            c.identity[fx.field] = value;
+            if (!c.identityUnlocked.includes(fx.field)) c.identityUnlocked.push(fx.field);
+          }
+          break;
+        }
+
         default:
           console.warn('Story: unknown effect type', fx.type);
       }
     });
+  }
+
+  function clamp01to100(n) { return Math.max(0, Math.min(100, n)); }
+
+  // ---- interaction tracking + neglect score (RANCANGAN_MULTI_KARAKTER.md §5) ----
+  // Call whenever a message is sent to one of the 10 characters (see
+  // apps/dashchat.js). No-ops for threads that aren't a registered
+  // character (e.g. the old 'assistant' tutorial thread).
+  function recordInteraction(charId) {
+    const s = AppState.get();
+    const c = s.characters[charId];
+    if (!c) return;
+    c.messageCount += 1;
+    c.lastInteractedDay = s.meta.day;
+    s.attention.totalMessages += 1;
+  }
+
+  // Combines two measures into one 0-100 "how neglected does this
+  // character feel" score:
+  //  1) days since last contact (0 if never met — you can't neglect
+  //     someone you haven't started talking to yet)
+  //  2) attention ratio — how much of the player's TOTAL messages
+  //     (across all 10) went to everyone else instead of this one,
+  //     so a short gap can still register as neglect if the player is
+  //     clearly spending nearly all their attention elsewhere.
+  // Weights below are a starting point, not tuned against real
+  // playtesting yet — easy to adjust in one place as content is written.
+  function computeNeglect(charId) {
+    const s = AppState.get();
+    const c = s.characters[charId];
+    if (!c) return 0;
+    if (c.lastInteractedDay === null) return 0; // haven't met yet
+    const dayGap = Math.max(0, s.meta.day - c.lastInteractedDay);
+    const total = s.attention.totalMessages;
+    const attentionElsewhereRatio = total > 0 ? Math.max(0, (total - c.messageCount) / total) : 0;
+    const score = dayGap * 5 + attentionElsewhereRatio * 40;
+    return clamp01to100(score);
   }
 
   // like runEffects, but guarantees a given node's effects only ever fire
@@ -500,6 +620,8 @@ const Story = (function () {
     bumpRevealed,
     setAwaiting,
     runEffects,
-    runEffectsOnce
+    runEffectsOnce,
+    recordInteraction,
+    computeNeglect
   };
 })();

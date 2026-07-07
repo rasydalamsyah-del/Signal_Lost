@@ -268,7 +268,44 @@ meta: { day: 1, ambientTick: 0 } // day naik otomatis dari ambientTick
   tengah malam di tengah cutscene 48-step), dan guard input tidak
   valid (0/negatif/NaN/Infinity/string).
 
-### ⏭️ Langkah 3 — Engine efek (belum dikerjakan)
+### ✅ Langkah 3 — Engine efek (selesai)
+- **`core/story.js`** — 4 effect type baru di `runEffects()`:
+  - `adjustStat` — ubah 1 stat di 1 target (`target:'self'` → `selfStats`,
+    atau id karakter → `characters[id].stats`); di-clamp 0-100 kecuali
+    `money` (nominal, gak dibatasi).
+  - `globalRipple` — kalau stat karakter sumber (`fx.source`) lewat
+    ambang (`fx.condition.gte`), semua karakter LAIN (lintas gender)
+    kena `fx.targetStat += fx.delta`. Sumbernya sendiri gak ikut kena.
+  - `rivalRipple` — versi lebih tajam, cuma kena ke `getRivals(source)`
+    (default sesama-gender dari `core/characters.js`), bukan semua.
+  - `revealIdentity` — isi 1 field biografis (`target:'self'` →
+    `selfIdentity`, atau id karakter → `characters[id].identity` +
+    dicatat di `identityUnlocked` biar gak dobel).
+  - `deliverFirstLine` sekalian dibetulkan — sebelumnya masih pakai
+    `new Date()` device asli buat timestamp, sekarang pakai jam
+    in-game (konsisten sama perbaikan Langkah 2).
+- Tambah `Story.recordInteraction(charId)` — no-op kalau `charId`
+  bukan salah satu dari 10 karakter (misal `assistant`), kalau valid:
+  naikkan `messageCount` karakter itu, `lastInteractedDay = meta.day`,
+  dan `attention.totalMessages` global naik satu.
+- Tambah `Story.computeNeglect(charId)` — skor 0-100 gabungan dari (1)
+  jarak hari sejak kontak terakhir × 5, dan (2) rasio perhatian yang
+  "lari" ke karakter lain × 40 — dibulatkan/clamp, dan otomatis 0
+  kalau belum pernah dikontak sama sekali (belum ketemu = belum bisa
+  "diabaikan"). Rumus di satu tempat, gampang di-tuning nanti pas
+  playtest sungguhan.
+- **`apps/dashchat.js`**: `evalCondition` nambah tipe kondisi baru
+  `{ when:'neglect', charId, gte, next }` (dipakai bareng `skipTo`
+  kayak `allFilled`/`flag` yang udah ada), plus `Story.recordInteraction`
+  dipanggil di titik kirim pesan (pilihan & input bebas) — no-op buat
+  thread `assistant` yang belum jadi karakter terdaftar.
+- **`core/state.js`**: tambah `messageCount` per karakter dan
+  `attention.totalMessages` global sebagai basis data buat neglect score.
+- Sudah divalidasi: `node --check` semua file + simulasi headless
+  penuh (clamp stat, threshold ripple, rival-only ripple, reveal +
+  anti-dupe, neglect 0 sebelum kontak, neglect naik seiring hari &
+  rasio perhatian, no-op buat thread non-karakter).
+
 ### ⏭️ Langkah 4 — Settings lanjutan (belum dikerjakan — bagian dasar sudah di Langkah 1)
 ### ⏭️ Langkah 5 — App "Diri" (belum dikerjakan)
 ### ⏭️ Langkah 6 — Contacts & DashChat wiring ke 10 karakter (belum dikerjakan — termasuk migrasi konten lama)
