@@ -207,6 +207,132 @@ meta: { day: 1, ambientTick: 0 } // day naik otomatis dari ambientTick
 
 ---
 
+## 10. UPDATE (setelah Langkah 8 selesai) — 3 perubahan besar berikutnya
+
+Status: **CATATAN RANCANGAN, belum dikerjakan.** Ditulis dulu sebelum
+mulai coding, biar terstruktur — ini rangkuman keputusan dari diskusi
+lanjutan setelah semua 10 karakter kelar ditulis.
+
+### 10.1 Gender user + pembatasan kandidat pasangan
+**Masalah:** `profile` belum punya field gender user. Kalau nanti
+mekanisme "jadi pasangan" diimplementasi tanpa ini, ke-10 karakter
+(termasuk yang sama gender) bisa jadi kandidat pasangan — janggal.
+
+**Keputusan:**
+- Tambah field baru: `profile.userGender` (`'f'` atau `'m'`), diisi
+  user di awal (bagian dari tutorial Asisten, nambah 1 pertanyaan).
+- Kandidat "pasangan" **dibatasi ke lawan gender doang** (5 karakter),
+  bukan opsi ketertarikan custom — biar tetap simpel.
+- Efeknya juga ke §10.2 di bawah: pilihan starter karakter pun jadi
+  cuma nunjukin 5 karakter lawan gender, bukan 10.
+
+### 10.2 Kontak muncul bertahap, bukan 10 sekaligus
+**Masalah:** Implementasi sekarang (`introduceAllCharacters`, efek dari
+Langkah 6) nambahin ke-10 karakter ke kontak sekaligus & diam-diam
+begitu tutorial Asisten kelar. Ini gak sesuai konsep "mulai dari 1,
+nambah seiring waktu".
+
+**Keputusan:**
+- Setelah tutorial Asisten kelar, muncul **pilihan starter**: cuma
+  **5 karakter lawan gender** user yang ditampilkan (lihat §10.1),
+  user pilih **1** buat mulai duluan.
+- Cuma karakter itu yang muncul di kontak DashChat di awal.
+- **Rantai perkenalan tetap** (bukan beda-beda tergantung starter):
+  tiap karakter, di titik tertentu deket akhir obrolannya (sekitar
+  milestone), memperkenalkan **1 karakter lain** — karakter itu baru
+  muncul di kontak setelah itu. Rantainya sama untuk semua orang,
+  cuma titik masuknya beda (tergantung siapa yang dipilih jadi starter
+  di awal) — pada akhirnya walau mulai dari mana pun, working
+  through the chain bakal nyampe ke semua 10 karakter.
+- Perlu: effect baru `introduceCharacter(charId)` (versi singular dari
+  `introduceAllCharacters`), dipasang di satu node baru per karakter
+  (dekat/di milestone) yang manggil effect ini buat karakter
+  "berikutnya" di rantai.
+- `introduceAllCharacters` (Langkah 6) kemungkinan besar **tidak
+  dipakai lagi** buat alur normal — cuma effect `introduceCharacter`
+  tunggal yang dipakai berantai. Perlu diputuskan detail urutan
+  rantainya pas mulai coding (siapa kenalin siapa).
+
+### 10.3 App "Pekerjaan" — job posting dengan jadwal hari & jam
+**Masalah:** Mini-job sekarang (Langkah 7, `completeMiniJob`) cuma
+efek sekali-jalan langsung dari dialog — gak ada halaman/app
+tersendiri, gak ada jadwal, gak ada konsep "kerjaan tetap yang bisa
+diulang". User minta versi yang lebih konkret & persisten.
+
+**Konsep baru (menggantikan/menambah di atas mekanisme lama):**
+- Begitu trust/kedekatan ke karakter tertentu cukup tinggi, karakter
+  itu **membuka lowongan kerja** — muncul sebagai entry persisten di
+  app baru **"Pekerjaan"**, bukan cuma efek sekali dari dialog.
+- Tiap entry pekerjaan berisi: nama pekerjaan, gaji, **jadwal** (hari
+  apa aja aktif + jam mulai-jam selesai).
+- **Kotak pekerjaan cuma muncul di halaman kalau waktu in-game
+  (hari + jam) pas cocok sama jadwalnya.** Contoh: barista aktif
+  Senin/Jumat/Minggu jam 13.00-15.00 → di luar hari & jam itu, kotak
+  pekerjaan ini hilang dari halaman, gak bisa dikerjakan.
+- **Perlu konsep hari-dalam-minggu** — `meta.day` sekarang cuma angka
+  naik terus, belum ada pemetaan ke nama hari (Senin/Selasa/.../
+  Minggu). Perlu fungsi baru: `dayOfWeek(day)` → nama hari (misal
+  hari 1 = Senin, lalu `(day-1) % 7`).
+
+**Dua jenis pekerjaan:**
+1. **Rutin (recurring)** — bisa dikerjakan berkali-kali, tiap kali
+   jadwalnya aktif.
+2. **Sekali seumur hidup (one-time)** — begitu dikerjakan sekali,
+   hilang dari app selamanya.
+
+**Aturan buat pekerjaan rutin:**
+- **Batas 1x per hari aktif** — kalau jadwal lagi aktif dan user
+  sudah mengerjakannya hari itu, dianggap selesai buat hari itu; gak
+  bisa dikerjakan lagi di hari yang sama walau masih dalam jam aktif
+  yang sama. Harus nunggu hari lain di mana jadwalnya aktif lagi.
+- **Mekanisme "dipecat"** — kalau user melewatkan jadwal aktif
+  (gak ngerjain padahal lagi aktif, sampai jendela waktunya lewat)
+  sebanyak **N kali** dalam batas waktu tertentu (**per minggu** ATAU
+  **per bulan**, keduanya valid tergantung pekerjaannya — dikonfigurasi
+  per-job, bukan aturan global tunggal), maka pekerjaan itu **hilang
+  selamanya** dari app (gak akan muncul lagi). Contoh yang dikasih:
+  5x kelewatan dalam 1 bulan → dipecat.
+- Butuh tracking: hitungan "kelewatan" per job, direset/dievaluasi
+  dalam jendela waktu bergulir sesuai `missBoundary` job itu (minggu
+  atau bulan).
+
+**Sketsa struktur data (belum final):**
+```js
+jobPostings: {
+  job_barista_nadia: {
+    id: 'job_barista_nadia',
+    title: 'Barista',
+    charId: 'char_nadia',           // siapa yang buka lowongan ini
+    salary: 40000,
+    type: 'recurring',               // 'recurring' | 'onceForever'
+    schedule: {
+      days: ['Senin', 'Jumat', 'Minggu'],
+      startMinute: 780,              // 13:00
+      endMinute: 900                 // 15:00
+    },
+    missThreshold: 5,                // cuma relevan kalau recurring
+    missBoundaryDays: 30,            // 30 = "per bulan", 7 = "per minggu"
+    missLog: [],                     // array of {day: N} tiap kali kelewatan
+    lastWorkedDay: null,             // meta.day terakhir kali dikerjakan
+    firedForever: false,
+    active: true                     // false kalau firedForever atau (utk onceForever) udah pernah dikerjakan
+  }
+}
+```
+
+**Yang masih perlu diputuskan detail teknisnya pas mulai coding:**
+- Apakah pengecekan "kelewatan" dihitung otomatis tiap kali jendela
+  aktif berakhir (butuh semacam scheduler/cek berkala berbasis
+  `meta.day`/`phone.time` saat ini dibandingkan ke jadwal), atau
+  dihitung lazy (baru dicek pas app Pekerjaan dibuka/pas ada aksi lain)
+- Mini-job yang udah ditulis di 10 naskah karakter (Langkah 7-8, pakai
+  `completeMiniJob`) — apakah dibiarkan seperti itu (bantuan kecil
+  sekali-jalan, terpisah dari sistem baru ini), atau dimigrasi jadi
+  job posting juga? (kemungkinan besar: dibiarkan, karena beda konsep
+  — bantuan sekali vs lowongan kerja beneran)
+
+---
+
 ## 9. Log progres implementasi
 
 ### ✅ Langkah 1 — Fondasi data (selesai)
