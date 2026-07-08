@@ -276,6 +276,39 @@ nambah seiring waktu".
   tunggal yang dipakai berantai. Perlu diputuskan detail urutan
   rantainya pas mulai coding (siapa kenalin siapa).
 
+**✅ SELESAI (implementasi):**
+- `apps/dashchat.js`: `evalCondition` nambah tipe kondisi generik
+  `{ when:'profileEquals', path, equals, next }` — dipakai buat
+  nge-gate starter picker berdasar gender.
+- `core/story.js`: effect baru `introduceCharacter(charId)` (singular,
+  idempoten — no-op kalau karakter itu udah jadi kontak).
+  `introduceAllCharacters` dibiarkan ada di kode (gak dihapus, masih
+  dites & valid) tapi udah gak dipanggil di alur normal manapun —
+  murni buat referensi/testing.
+- **Alur baru `a_farewell`**: gak langsung `introduceAllCharacters`
+  lagi. Sekarang: `a_farewell` → `a_gender_route` (gerbang `skipTo`
+  `profileEquals` cek `profile.userGender`) → `a_pick_starter_for_m`
+  (nunjukin 5 nama perempuan: Nadia/Kirana/Salsa/Bella/Intan) ATAU
+  `a_pick_starter_for_f` (5 nama laki-laki: Bagas/Raka/Fahri/Dimas/
+  Aldo) → pilih 1 → `introduceCharacter` buat yang dipilih →
+  `a_starter_done` (baru di sini `endThread` jalan, assistant beneran
+  hilang — bukan pas farewell, biar picker-nya sempat kepake dulu).
+- **Rantai tetap (`CHAIN_NEXT`)**: Nadia→Kirana→Salsa→Bella→Intan→
+  Bagas→Raka→Fahri→Dimas→Aldo→(balik ke Nadia). Disuntikkan
+  programatik (bukan diketik manual 10x) — loop yang nambahin effect
+  `introduceCharacter` ke `effects` node `{id}_milestone` tiap
+  karakter, dijalankan sekali setelah semua 10 naskah karakter
+  selesai didefinisikan (sebelum bagian ENGINE).
+- Sudah divalidasi: `node --check` semua file + simulasi headless
+  (semua 10 milestone dicek satu-satu match `CHAIN_NEXT`, walk 3
+  langkah rantai via effect langsung, idempotency re-run gak dobel)
+  + **integrasi DOM penuh**: lompat ke `a_farewell` beneran (gender
+  laki-laki), verifikasi starter picker cuma nunjukin nama perempuan,
+  klik "Nadia" beneran → kontak cuma `char_nadia` (assistant langsung
+  hilang), lalu **jalanin obrolan Nadia sampai milestone lewat klik
+  tombol sungguhan** (bukan shortcut) → **Kirana beneran muncul
+  sendiri di kontak** setelahnya.
+
 ### 10.3 App "Pekerjaan" — job posting dengan jadwal hari & jam
 **Masalah:** Mini-job sekarang (Langkah 7, `completeMiniJob`) cuma
 efek sekali-jalan langsung dari dialog — gak ada halaman/app

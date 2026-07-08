@@ -18,6 +18,9 @@
   //     see RANCANGAN_MULTI_KARAKTER.md §5
   //   { when:'jobOverlap', charId:'char_x', next } — player's settled
   //     job matches that character's profession — see §4
+  //   { when:'profileEquals', path:'profile.x', equals:val, next } —
+  //     generic profile-path equality check (used for the gender-based
+  //     starter-picker routing, RANCANGAN_MULTI_KARAKTER.md §10.2)
   function evalCondition(cond) {
     if (!cond) return false;
     if (cond.when === 'allFilled') {
@@ -32,6 +35,9 @@
     }
     if (cond.when === 'jobOverlap') {
       return Story.hasJobOverlap(cond.charId);
+    }
+    if (cond.when === 'profileEquals') {
+      return AppState.getPath(cond.path) === cond.equals;
     }
     return false;
   }

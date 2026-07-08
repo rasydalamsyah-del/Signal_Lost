@@ -185,14 +185,44 @@ const Story = (function () {
       a_farewell: {
         lines: [
           'oke {{user}}, kayaknya itu doang yang perlu kamu tau buat sekarang.',
-          'aku bakal ilang dari kontak setelah ini — biasanya emang gitu, jangan kaget ya.',
-          'bakal ada beberapa nomor baru yang muncul di kontak kamu nanti.',
-          'hati-hati aja sama sinyal di hp ini.'
+          'satu hal terakhir — biar kamu bisa mulai, coba pilih 1 orang buat mulai ngobrol duluan.',
+          'abis itu aku bakal ilang dari kontak — biasanya emang gitu, jangan kaget ya.'
         ],
-        effects: [
-          { type: 'endThread', threadId: 'assistant' },
-          { type: 'introduceAllCharacters' }
+        next: 'a_gender_route'
+      },
+
+      // ---- gerbang gender: nentuin 5 kandidat starter yang muncul
+      // (lawan gender doang) — lihat RANCANGAN_MULTI_KARAKTER.md §10.1/10.2 ----
+      a_gender_route: {
+        lines: [],
+        skipTo: { when: 'profileEquals', path: 'profile.userGender', equals: 'm', next: 'a_pick_starter_for_m' },
+        next: 'a_pick_starter_for_f'
+      },
+      // user laki-laki -> starter dari 5 karakter perempuan
+      a_pick_starter_for_m: {
+        lines: ['siapa yang mau kamu ajak ngobrol duluan?'],
+        choices: [
+          { label: 'Nadia', next: 'a_starter_done', effects: [{ type: 'introduceCharacter', charId: 'char_nadia' }] },
+          { label: 'Kirana', next: 'a_starter_done', effects: [{ type: 'introduceCharacter', charId: 'char_kirana' }] },
+          { label: 'Salsa', next: 'a_starter_done', effects: [{ type: 'introduceCharacter', charId: 'char_salsa' }] },
+          { label: 'Bella', next: 'a_starter_done', effects: [{ type: 'introduceCharacter', charId: 'char_bella' }] },
+          { label: 'Intan', next: 'a_starter_done', effects: [{ type: 'introduceCharacter', charId: 'char_intan' }] }
         ]
+      },
+      // user perempuan -> starter dari 5 karakter laki-laki
+      a_pick_starter_for_f: {
+        lines: ['siapa yang mau kamu ajak ngobrol duluan?'],
+        choices: [
+          { label: 'Bagas', next: 'a_starter_done', effects: [{ type: 'introduceCharacter', charId: 'char_bagas' }] },
+          { label: 'Raka', next: 'a_starter_done', effects: [{ type: 'introduceCharacter', charId: 'char_raka' }] },
+          { label: 'Fahri', next: 'a_starter_done', effects: [{ type: 'introduceCharacter', charId: 'char_fahri' }] },
+          { label: 'Dimas', next: 'a_starter_done', effects: [{ type: 'introduceCharacter', charId: 'char_dimas' }] },
+          { label: 'Aldo', next: 'a_starter_done', effects: [{ type: 'introduceCharacter', charId: 'char_aldo' }] }
+        ]
+      },
+      a_starter_done: {
+        lines: ['oke, nomornya udah masuk ke kontak kamu.', 'hati-hati aja sama sinyal di hp ini.'],
+        effects: [{ type: 'endThread', threadId: 'assistant' }]
       }
     },
 
@@ -1439,6 +1469,32 @@ const Story = (function () {
     effects: [{ type: 'globalRipple', source: 'char_dimas', condition: { stat: 'love', gte: 7 }, targetStat: 'jealousy', delta: 2 }]
   };
 
+  // ---- chain introduction (RANCANGAN_MULTI_KARAKTER.md §10.2) ----
+  // A fixed cycle through all 10 characters: whichever one the player
+  // is currently closest to, reaching THEIR milestone node introduces
+  // the next character in this list. Order doesn't matter much (any
+  // fixed cycle guarantees every character is eventually reachable no
+  // matter which of the 5 starters was picked at the beginning) — this
+  // one just follows the same order as core/characters.js.
+  const CHAIN_NEXT = {
+    char_nadia: 'char_kirana',
+    char_kirana: 'char_salsa',
+    char_salsa: 'char_bella',
+    char_bella: 'char_intan',
+    char_intan: 'char_bagas',
+    char_bagas: 'char_raka',
+    char_raka: 'char_fahri',
+    char_fahri: 'char_dimas',
+    char_dimas: 'char_aldo',
+    char_aldo: 'char_nadia'
+  };
+  Object.keys(CHAIN_NEXT).forEach(id => {
+    const milestone = STORY[id] && STORY[id][id + '_milestone'];
+    if (!milestone) { console.warn('Story: no milestone node found for', id, '— chain introduction not wired'); return; }
+    milestone.effects = milestone.effects || [];
+    milestone.effects.push({ type: 'introduceCharacter', charId: CHAIN_NEXT[id] });
+  });
+
   // ================= ENGINE =================
 
   function resolveText(str) { return AppState.resolveText(str); }
@@ -1560,11 +1616,10 @@ const Story = (function () {
 
         // add ALL 10 baked-in characters to Contacts/DashChat at once —
         // idempotent (skips anyone already introduced, so re-running
-        // this effect is harmless). Deliberately silent (isNew: false,
-        // no notification): this represents "these people are now in
-        // your phone", not "they just messaged you" — the player has
-        // full freedom to start any of these 10 conversations whenever
-        // they want, see RANCANGAN_MULTI_KARAKTER.md §1.
+        // this effect is harmless). NOTE: no longer used by the normal
+        // farewell flow as of RANCANGAN_MULTI_KARAKTER.md §10.2 (contacts
+        // now appear one at a time via the starter-pick + chain
+        // mechanic below) — kept for reference/testing.
         case 'introduceAllCharacters': {
           allCharacterIds().forEach(id => {
             if (s.chats[id]) return; // already introduced
@@ -1572,6 +1627,23 @@ const Story = (function () {
             s.contacts.push({ id, name: def.name, avatar: def.avatar, lastUpdate: '', isNew: false });
             s.chats[id] = { name: def.name, messages: [] };
           });
+          break;
+        }
+
+        // add ONE character to Contacts/DashChat — idempotent (no-op
+        // if already introduced). This is the real mechanic now: the
+        // starter picker (a_pick_starter_for_m/f) introduces the
+        // player's first choice, and each character's milestone node
+        // introduces the "next" character in CHAIN_NEXT (see below),
+        // so contacts grow one at a time as the player deepens each
+        // relationship — see RANCANGAN_MULTI_KARAKTER.md §10.2.
+        case 'introduceCharacter': {
+          const id = fx.charId;
+          if (!s.chats[id] && CHARACTERS[id]) {
+            const def = CHARACTERS[id];
+            s.contacts.push({ id, name: def.name, avatar: def.avatar, lastUpdate: '', isNew: false });
+            s.chats[id] = { name: def.name, messages: [] };
+          }
           break;
         }
 
