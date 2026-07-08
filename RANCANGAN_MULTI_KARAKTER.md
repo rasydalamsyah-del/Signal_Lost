@@ -471,6 +471,116 @@ ngomongin hari yang sama.
 
 ---
 
+## 11. UPDATE — Simulasi harian penuh (tidur/bangun, rutinitas, stat kebutuhan, kalender grid, ulang tahun)
+
+Status: **CATATAN RANCANGAN, belum dikerjakan.** Ditulis sebelum mulai
+coding, setelah diskusi lanjutan pasca-bug home screen (§10.3).
+
+### 11.1 Kenapa ini muncul
+User nanya soal detail tanggal/hari/jam game, notice Kalender masih
+list sederhana (bukan grid bulan), dan minta rentetan fitur simulasi
+harian: tidur/bangun, rutinitas pagi, ulang tahun karakter, dan stat
+baru. Dikonfirmasi: user MAU semuanya, minta Claude yang susun
+prioritas & urutan (bukan pilih salah satu).
+
+### 11.2 Stat baru — 2 kategori (KEPUTUSAN FINAL)
+**Kebutuhan** (menurun seiring waktu/aktivitas, dijaga lewat MyShop/istirahat):
+- `energi` — turun tiap aktivitas, cuma pulih total kalau tidur
+- `lapar` — turun seiring waktu, naik kalau makan (integrasi ke MyShop)
+- `kesehatan` — turun kalau energi/lapar dibiarin rendah kelamaan;
+  naik dari istirahat atau obat (integrasi natural ke Intan/apoteker)
+- `kebersihan` — turun tiap hari, pulih dari rutinitas pagi (mandi)
+
+**Pengembangan diri** (naik dari rutinitas):
+- `kepintaran` — naik dari rutinitas kuliah/ke perpus
+- `kekuatan` — naik dari rutinitas olahraga/aktivitas fisik
+
+Ditaruh di `selfStats` (samain sama happiness/sadness/jealousy/money
+yang udah ada), bukan bikin slice baru — biar app "Diri" (Langkah 5)
+tinggal ditambah baris, gak perlu app baru.
+
+### 11.3 Sistem tanggal/bulan (fondasi baru)
+`meta.day` sekarang cuma angka naik + `dayOfWeek()` (7 hari berulang) —
+belum ada bulan/tahun. Perlu ditambah:
+- Konsep bulan: pilih 1 bulan = 30 hari (simpel, gak perlu kalender
+  ala dunia nyata yang rumit — Januari 31 hari dst terlalu detail buat
+  kebutuhan game ini).
+- `monthOfDay(day)` / `dateInMonth(day)` — turunan dari `meta.day`,
+  sama kayak `dayOfWeek()` (Langkah 10.3), bukan field state terpisah
+  yang bisa desync.
+- Awal game: hari ke-1 = tanggal 1, bulan 1 ("Bulan 1" — gak perlu
+  nama-nama bulan asli kayak Januari/Februari, cukup angka, biar gak
+  ambigu di dunia fiksi tanpa tahun kalender nyata).
+
+### 11.4 Kalender grid (UI baru, ganti list sederhana)
+`apps/calendar.js` dirombak dari list jadi **grid bulan** kayak
+kalender HP asli beneran (baris hari Minggu-Sabtu, kotak per
+tanggal) — pakai `monthOfDay()`/`dateInMonth()` buat nentuin posisi
+kotak. Event (`AppState.calendar`) & ulang tahun (§11.6) muncul
+sebagai ikon kecil di kotak tanggalnya.
+
+### 11.5 Tidur/bangun — mekanisme baru
+- Ikon "Istirahat" (bisa di home screen atau notifikasi pas malam) →
+  buka **screen baru** `screens/sleepScreen.js`, mirip pola
+  `timeSkip.js` tapi visual beda: **layar gelap, ikon bulan/bintang,
+  teks "..zzz.."** (bukan jam besar terang) — biar berasa beda momen
+  dari time-skip biasa.
+- Waktu di-skip otomatis sampai **jam 7 pagi** hari berikutnya (pakai
+  `AppState.tick()` yang udah ada, sama presisinya kayak `timeSkip.js`).
+- Efek: `energi` pulih penuh (atau signifikan), `kebersihan` turun
+  dikit (perlu mandi pagi lagi).
+- Kalau `energi` udah abis duluan sebelum sempat tidur (target masa
+  depan, opsional): bisa maksa transisi ke malam/tidur otomatis —
+  belum diputuskan detailnya, bisa disederhanakan dulu (tidur cuma
+  lewat pilihan manual, bukan dipaksa).
+
+### 11.6 Rutinitas harian (konten baru, pakai stat §11.2)
+Setelah bangun jam 7: rutinitas pagi (mandi/gosok gigi — pulihin
+`kebersihan`, effect instan gak perlu pilihan panjang), lalu pilihan
+aktivitas hari itu (mirip menu, bukan wajib satu-satu):
+- Ke kampus/kuliah → `kepintaran` naik, `energi`/`lapar` turun dikit
+- Ke perpus → `kepintaran` naik lebih pelan, tapi gak capek-capek amat
+- Olahraga → `kekuatan` naik, `energi`/`lapar` turun lumayan
+- (kosong/`skip`) → gak naik apa-apa, tapi juga gak makan energi ekstra
+
+Alur harian penuh yang diminta: **dialog karakter → time-skip →
+dialog karakter lain → time-skip → tidur → bangun → rutinitas pagi →
+pilih aktivitas → lanjut dialog lagi**, berulang. Ini pada dasarnya
+merangkai potongan yang UDAH ADA (`timeSkip.js`, dialog per karakter)
+dengan potongan BARU (`sleepScreen.js`, menu rutinitas) jadi satu
+loop harian yang jelas.
+
+### 11.7 Ulang tahun karakter (butuh 11.3 dulu)
+- Tambah `birthDate: { month, day }` ke tiap entry di
+  `core/characters.js` (statis, sama kayak nama/gender/job).
+- Efek baru di dialog: kalau kedekatan (trust/love) ke karakter cukup
+  tinggi, karakter itu **cerita kapan ulang tahunnya** (mirip pola
+  `revealIdentity`) — begitu keceritain, muncul ikon 🎂 otomatis di
+  kotak kalender pas tanggal itu (butuh grid kalender §11.4 dulu, dan
+  butuh cek tiap render kalender: karakter mana yang udah reveal
+  ulang tahun + tanggalnya cocok bulan yang lagi dilihat).
+
+### 11.8 Urutan pengerjaan (disepakati — Claude yang susun)
+1. **Stat baru** (§11.2) — fondasi, ditambah ke `selfStats` +
+   ditampilkan di app Diri
+2. **Sistem tanggal/bulan** (§11.3) — fondasi kedua, `monthOfDay()`/
+   `dateInMonth()`, dibutuhkan langkah 3 & 5
+3. **Tidur/bangun** (§11.5) — mekanisme baru, pakai stat `energi`
+4. **Rutinitas harian** (§11.6) — konten baru, pakai SEMUA stat
+   §11.2, nyambung ke tidur/bangun dari langkah 3
+5. **Kalender grid** (§11.4) — UI baru, pakai sistem tanggal §11.3
+6. **Ulang tahun karakter** (§11.7) — butuh grid kalender (langkah 5)
+   kelar dulu baru bisa nampilin ikon-nya dengan benar
+
+Belanja (MyShop) buat beli makanan/kebutuhan — disebut user sebagai
+bagian dari alasan kenapa stat ini perlu ada — **belum masuk urutan
+di atas**, kemungkinan jadi langkah ke-7 setelah 6 langkah ini kelar
+(integrasi MyShop supaya jual item yang mengembalikan `lapar`/
+`kebersihan`/`kesehatan`), karena scope-nya udah cukup besar buat satu
+sesi kerja.
+
+---
+
 ## 9. Log progres implementasi
 
 ### ✅ Langkah 1 — Fondasi data (selesai)
