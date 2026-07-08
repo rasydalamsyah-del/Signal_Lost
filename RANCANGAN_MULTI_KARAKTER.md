@@ -410,10 +410,10 @@ jadi tidak ada kerjaan tambahan — lanjut ke Langkah 5.
   bug di skrip tes sendiri (salah cari frasa), sudah dikoreksi dan
   diverifikasi ulang — bukan bug di kode game.
 
-### 🔶 Langkah 8 — Konten penuh per karakter (2/10 selesai: Nadia, Kirana)
+### 🔶 Langkah 8 — Konten penuh per karakter (4/10 selesai: Nadia, Kirana, Salsa, Bagas)
 Sesuai kesepakatan build-order ("kerangka teknis 10 penuh dari awal,
-konten bertahap"), 2 karakter pertama sudah ditulis dalam & lengkap
-menggantikan stub generik-nya; 8 sisanya masih pakai stub generik
+konten bertahap"), 4 karakter pertama sudah ditulis dalam & lengkap
+menggantikan stub generik-nya; 6 sisanya masih pakai stub generik
 dari Langkah 6 sampai gilirannya masing-masing.
 
 - **Nadia** (barista, ceria/banyak becanda) — `core/story.js`
@@ -431,18 +431,29 @@ dari Langkah 6 sampai gilirannya masing-masing.
   dukungan emosional vs saran teknis (dua jalur trust beda) → reveal
   hobi (Menggambar Digital) → tawaran mini-job (desainer) → penutup,
   dengan `globalRipple` di milestone-nya (gerbang `trust>=15`).
-- Sudah divalidasi: `node --check` + **audit graf node** (BFS dari
-  node awal tiap thread, pastiin semua `next`/`choices[].next`/
-  `skipTo.next` nyambung ke node yang beneran ada — 0 referensi rusak
-  buat Nadia/Kirana/Dimas/stub generik) + **integrasi DOM penuh pakai
-  jsdom**: jalanin dua jalur lengkap Nadia & Kirana lewat klik tombol
-  sungguhan, verifikasi tiap angka stat/identity/uang sesuai
-  perhitungan manual, DAN buktikan **aturan "job cuma menetap sekali"
-  dari Langkah 7 beneran kepake lintas-karakter** — pemain yang udah
-  jadi Barista dari mini-job Nadia, coba terima mini-job Kirana
-  (Desainer Grafis) juga, `selfIdentity.pekerjaan` tetap "Barista",
-  gak ketiban ganti. Juga cek regresi: 8 karakter stub lain masih
-  jalan normal, gak kena dampak.
-- Sisa 8 karakter (Salsa, Bella, Intan, Bagas, Raka, Fahri, Aldo — plus
-  Dimas yang masih perlu naskah utuh di luar gerbang overlap-nya)
-  masih pakai stub generik, nunggu giliran ditulis di sesi berikutnya.
+- **Salsa** (mahasiswa, cemas/overthinking, butuh validasi) —
+  `STORY.char_salsa` (13 node): beda lagi — dia kebuka dari awal
+  (gak kayak Kirana), tapi ngomongnya nervous & suka minta maaf
+  duluan. Vent soal presentasi → pilihan validasi-emosional vs
+  saran-praktis (dua jalur trust beda) → reveal hobi (Menulis Jurnal)
+  → mini-job asisten riset (job baru: "Asisten Riset").
+- **Bagas** (montir, santai/simpel, dikit ngomong) — kebalikan Salsa:
+  gak nervous, gak butuh divalidasi. `STORY.char_bagas` (11 node):
+  pilihan chill vs curious → reveal pekerjaan → reveal hobi
+  (Modifikasi Motor Klasik) → mini-job bengkel.
+- Sudah divalidasi tiap tambahan: `node --check` + **audit graf node**
+  (BFS dari node awal tiap thread yang baru DAN yang lama, 0 referensi
+  rusak) + **integrasi DOM penuh pakai jsdom** — jalanin jalur lengkap
+  via klik tombol sungguhan, verifikasi semua angka stat/identity/uang
+  sesuai perhitungan manual (termasuk saldo awal 150rb yang harus
+  diperhitungkan). **Aturan "job cuma menetap sekali" (Langkah 7)
+  terus dites ulang tiap nambah karakter baru** — sekarang terbukti
+  konsisten lintas 4 karakter berturut-turut (Barista dari Nadia tidak
+  pernah ketiban Desainer Grafis/Asisten Riset/Montir dari yang
+  lain-lain). `rivalRipple` (cuma sesama-gender) vs `globalRipple`
+  (semua karakter) juga dikonfirmasi ulang berperilaku beda sesuai
+  desain. Regresi ke konten Nadia/Kirana yang udah ada juga dicek,
+  aman tidak kesenggol.
+- Sisa 6 karakter (Bella, Intan, Raka, Fahri, Aldo — plus Dimas yang
+  masih perlu naskah utuh di luar gerbang overlap-nya) masih pakai
+  stub generik, nunggu giliran ditulis di sesi berikutnya.

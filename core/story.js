@@ -642,6 +642,204 @@ const Story = (function () {
     }
   };
 
+  // ---------------------------------------------------------
+  // SALSA — mahasiswa, cemas/overthinking, sering butuh validasi.
+  // Beda dari Nadia (percaya diri) dan Kirana (tertutup): dia
+  // kebuka dari awal, tapi ngomongnya nervous & suka minta maaf
+  // duluan. Responsnya lebih ke seberapa dia dibikin ngerasa aman,
+  // bukan seberapa cepat/lambat dia kebuka.
+  // ---------------------------------------------------------
+  STORY.char_salsa = {
+    char_salsa_start: {
+      lines: [
+        'HALO. eh kepencet caps, maaf ya.',
+        'kamu siapa ya— eh maksudnya bukan nanya songong gitu, cuma belum kenal aja hehe maaf kalo aneh'
+      ],
+      next: 'char_salsa_ramble_choice'
+    },
+    char_salsa_ramble_choice: {
+      lines: ['oke tarik napas dulu. jadi... kamu nemu kontakku dari mana emangnya?'],
+      choices: [
+        {
+          label: 'Random aja muncul, santai kok.',
+          next: 'char_salsa_after_chill',
+          effects: [
+            { type: 'adjustStat', target: 'char_salsa', stat: 'trust', delta: 4 },
+            { type: 'adjustStat', target: 'char_salsa', stat: 'mood', delta: 3 }
+          ]
+        },
+        {
+          label: '(gak jawab, nunggu dia lanjut ngomong)',
+          next: 'char_salsa_after_silence',
+          effects: [{ type: 'adjustStat', target: 'char_salsa', stat: 'trust', delta: 1 }]
+        }
+      ]
+    },
+    char_salsa_after_chill: {
+      lines: ['oh oke syukurlah, bukan yang aneh-aneh wkwk', 'aku emang suka overthinking orangnya, maaf ya kalo kelamaan mikir'],
+      next: 'char_salsa_reveal_job'
+    },
+    char_salsa_after_silence: {
+      lines: ['...eh kok diem, oke gapapa.', 'aku emang suka kebanyakan mikir sendiri sih, lanjut aja deh'],
+      next: 'char_salsa_reveal_job'
+    },
+    char_salsa_reveal_job: {
+      lines: ['aku masih kuliah btw, semesternya udah lumayan tanggung.', 'kadang mikir "abis ini ngapain ya" — anxiety tugas akhir tuh beda level'],
+      effects: [{ type: 'revealIdentity', target: 'char_salsa', field: 'pekerjaan', value: 'Mahasiswa' }],
+      next: 'char_salsa_worry_vent'
+    },
+    char_salsa_worry_vent: {
+      lines: ['td abis presentasi, rasanya jelek banget, tp temen-temen bilang bagus doang.', 'aku tuh susah percaya kalo emang beneran bagus wkwk'],
+      choices: [
+        {
+          label: 'Kalo kamu udah usaha maksimal, itu udah cukup kok.',
+          next: 'char_salsa_after_validate',
+          effects: [
+            { type: 'adjustStat', target: 'char_salsa', stat: 'trust', delta: 5 },
+            { type: 'adjustStat', target: 'char_salsa', stat: 'love', delta: 3 }
+          ]
+        },
+        {
+          label: 'Coba minta feedback yang spesifik, biar gak nebak-nebak sendiri.',
+          next: 'char_salsa_after_practical',
+          effects: [{ type: 'adjustStat', target: 'char_salsa', stat: 'trust', delta: 6 }]
+        }
+      ]
+    },
+    char_salsa_after_validate: {
+      lines: ['...makasih ya. jarang ada yang bilang gitu ke aku.', 'kadang emang cuma butuh didenger doang sih ternyata'],
+      next: 'char_salsa_reveal_hobby'
+    },
+    char_salsa_after_practical: {
+      lines: ['eh iya bener juga, aku emang suka nebak-nebak sendiri.', 'nanti coba deh aku tanya yang spesifik ke dosennya'],
+      next: 'char_salsa_reveal_hobby'
+    },
+    char_salsa_reveal_hobby: {
+      lines: ['di luar kuliah aku suka nulis jurnal harian, buat ngeluarin isi kepala.', 'kadang berantakan tulisannya, tp lumayan ngebantu sih'],
+      effects: [{ type: 'revealIdentity', target: 'char_salsa', field: 'hobi', value: 'Menulis Jurnal' }],
+      next: 'char_salsa_minijob_offer'
+    },
+    char_salsa_minijob_offer: {
+      lines: ['eh btw, dosenku lagi nyari asisten buat riset kecil-kecilan, honornya lumayan.', 'mau bantuin gak? gampang kok, cuma entry data doang'],
+      choices: [
+        {
+          label: 'Boleh, aku bantuin.',
+          next: 'char_salsa_minijob_done',
+          effects: [{ type: 'completeMiniJob', reward: 40000, jobTitle: 'Asisten Riset' }]
+        },
+        { label: 'Kayaknya lagi banyak kerjaan lain deh.', next: 'char_salsa_minijob_decline' }
+      ]
+    },
+    char_salsa_minijob_done: {
+      lines: ['yeay, makasih banyak! ini honornya.', 'kamu nyelametin aku dari deadline serius wkwk'],
+      effects: [
+        { type: 'adjustStat', target: 'char_salsa', stat: 'love', delta: 5 },
+        { type: 'rivalRipple', source: 'char_salsa', targetStat: 'jealousy', delta: 3 }
+      ],
+      next: 'char_salsa_milestone'
+    },
+    char_salsa_minijob_decline: {
+      lines: ['oke gapapa kok, makasih ya udah mau didengerin aja udah cukup.'],
+      next: 'char_salsa_milestone'
+    },
+    char_salsa_milestone: {
+      // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
+      lines: ['makasih ya udah mau dengerin overthinking-ku wkwk', 'jarang ada yang sabar denger curhat sepanjang ini'],
+      effects: [{ type: 'globalRipple', source: 'char_salsa', condition: { stat: 'trust', gte: 15 }, targetStat: 'jealousy', delta: 2 }]
+    }
+  };
+
+  // ---------------------------------------------------------
+  // BAGAS — montir, santai/simpel, dikit ngomong tapi perhatian.
+  // Kebalikan dari Salsa: gak nervous, gak muter-muter, dan
+  // gak butuh divalidasi — responsnya lebih ke seberapa "dilihat"
+  // dia ngerasa, bukan seberapa hangat kata-katanya.
+  // ---------------------------------------------------------
+  STORY.char_bagas = {
+    char_bagas_start: {
+      lines: ['eh, halo.', 'kontak baru? oke.'],
+      next: 'char_bagas_smalltalk_choice'
+    },
+    char_bagas_smalltalk_choice: {
+      lines: ['mau ngobrol apa nih, apa cuma say hi doang.'],
+      choices: [
+        {
+          label: 'Cuma mau say hi, kenalan santai.',
+          next: 'char_bagas_after_chill',
+          effects: [{ type: 'adjustStat', target: 'char_bagas', stat: 'trust', delta: 4 }]
+        },
+        {
+          label: 'Pengen tau kamu orangnya kayak gimana.',
+          next: 'char_bagas_after_curious',
+          effects: [
+            { type: 'adjustStat', target: 'char_bagas', stat: 'trust', delta: 3 },
+            { type: 'adjustStat', target: 'char_bagas', stat: 'love', delta: 2 }
+          ]
+        }
+      ]
+    },
+    char_bagas_after_chill: {
+      lines: ['oke, simpel. aku suka gitu.', 'gak semua obrolan harus dalem-dalem kan'],
+      next: 'char_bagas_reveal_job'
+    },
+    char_bagas_after_curious: {
+      lines: ['heh, to the point juga ternyata.', 'ya aku orangnya biasa aja sih, gak neko-neko'],
+      next: 'char_bagas_reveal_job'
+    },
+    char_bagas_reveal_job: {
+      lines: ['kerjaanku montir, di bengkel deket sini.', 'kerjaan kotor tapi enak — ngerasa kepake tiap kali benerin sesuatu yang rusak'],
+      effects: [{ type: 'revealIdentity', target: 'char_bagas', field: 'pekerjaan', value: 'Montir' }],
+      next: 'char_bagas_ask_hobby'
+    },
+    char_bagas_ask_hobby: {
+      lines: ['kalo kamu, demen ngapain emangnya.'],
+      choices: [
+        {
+          label: 'Cerita dulu dong hobi kamu, aku penasaran.',
+          next: 'char_bagas_hobby_reveal',
+          effects: [
+            { type: 'adjustStat', target: 'char_bagas', stat: 'trust', delta: 3 },
+            { type: 'adjustStat', target: 'char_bagas', stat: 'love', delta: 2 }
+          ]
+        },
+        { label: '(gak jawab, nunggu dia cerita duluan)', next: 'char_bagas_hobby_reveal' }
+      ]
+    },
+    char_bagas_hobby_reveal: {
+      lines: ['aku demen ngoprek motor tua di rumah, buat having sendiri.', 'gak buat dijual, cuma seneng liat mesin idup lagi aja'],
+      effects: [{ type: 'revealIdentity', target: 'char_bagas', field: 'hobi', value: 'Modifikasi Motor Klasik' }],
+      next: 'char_bagas_minijob_offer'
+    },
+    char_bagas_minijob_offer: {
+      lines: ['eh, bengkel lagi butuh bantuin angkat-angkat barang doang, gak ribet.', 'mau bantuin gak? lumayan buat jajan'],
+      choices: [
+        {
+          label: 'Boleh, gas bantuin.',
+          next: 'char_bagas_minijob_done',
+          effects: [{ type: 'completeMiniJob', reward: 55000, jobTitle: 'Montir' }]
+        },
+        { label: 'Kayaknya lagi capek deh.', next: 'char_bagas_minijob_decline' }
+      ]
+    },
+    char_bagas_minijob_done: {
+      lines: ['nice, makasih ya. serius nolong banget.', 'ini duitnya, gak usah sungkan'],
+      effects: [
+        { type: 'adjustStat', target: 'char_bagas', stat: 'love', delta: 4 },
+        { type: 'rivalRipple', source: 'char_bagas', targetStat: 'jealousy', delta: 3 }
+      ],
+      next: 'char_bagas_milestone'
+    },
+    char_bagas_minijob_decline: {
+      lines: ['oke, santai aja. lain kali kalo sempet.'],
+      next: 'char_bagas_milestone'
+    },
+    char_bagas_milestone: {
+      // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
+      lines: ['lumayan enak diajak ngobrol kamu ternyata.', 'gak perlu banyak kata buat ngerti orang — kayaknya kamu salah satunya'],
+      effects: [{ type: 'globalRipple', source: 'char_bagas', condition: { stat: 'love', gte: 6 }, targetStat: 'jealousy', delta: 2 }]
+    }
+  };
+
   // ================= ENGINE =================
 
   function resolveText(str) { return AppState.resolveText(str); }
