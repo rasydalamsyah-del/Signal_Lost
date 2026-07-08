@@ -169,7 +169,8 @@ const Story = (function () {
           'hati-hati aja sama sinyal di hp ini.'
         ],
         effects: [
-          { type: 'endThread', threadId: 'assistant' }
+          { type: 'endThread', threadId: 'assistant' },
+          { type: 'introduceAllCharacters' }
         ]
       }
     },
@@ -371,6 +372,53 @@ const Story = (function () {
     }
   };
 
+  // ---- STARTER STUBS for the 10 baked-in characters (RANCANGAN_MULTI_KARAKTER.md) ----
+  // Placeholder content, NOT the real per-character writing planned for
+  // Langkah 8 — this exists so the framework (contacts, DashChat,
+  // effect engine, neglect scoring, Diri app) has something real to
+  // run end-to-end for every one of the 10 right now, instead of
+  // crashing/being empty. Deliberately generic and short; each
+  // character's actual voice/arc gets written properly later, at
+  // which point these stub nodes get replaced (same node ids can be
+  // reused so nothing else needs to change).
+  //
+  // Each stub: a short opener, one real branching choice (proves
+  // effects fire correctly — nudges `trust` and reveals `pekerjaan`
+  // via the identity system built in Langkah 3), then a dead end
+  // (`next` omitted) marking "content continues here later".
+  allCharacterIds().forEach(id => {
+    const def = CHARACTERS[id];
+    STORY[id] = {
+      [id + '_start']: {
+        lines: [
+          'eh, hai. ' + def.name + ' — nomor kamu baru masuk di kontakku.',
+          'agak random emang, tapi ya udah say hi aja dulu deh wkwk.'
+        ],
+        next: id + '_intro_choice'
+      },
+      [id + '_intro_choice']: {
+        lines: ['gimana, mau kenalan dulu?'],
+        choices: [
+          {
+            label: 'Boleh, cerita dong.',
+            next: id + '_stub_reveal',
+            effects: [{ type: 'adjustStat', target: id, stat: 'trust', delta: 5 }]
+          },
+          { label: '(masih agak canggung, liat-liat dulu)', next: id + '_stub_end' }
+        ]
+      },
+      [id + '_stub_reveal']: {
+        lines: ['sehari-hari aku kerja jadi ' + def.job.title.toLowerCase() + '.', 'lumayan kok, walau kadang capek juga.'],
+        effects: [{ type: 'revealIdentity', target: id, field: 'pekerjaan', value: def.job.title }],
+        next: id + '_stub_end'
+      },
+      [id + '_stub_end']: {
+        // sengaja tidak ada `next` — jalan buntu, nunggu konten asli (Langkah 8)
+        lines: ['oke, segini dulu obrolan kita ya — lanjutannya nyusul kapan-kapan.']
+      }
+    };
+  });
+
   // ================= ENGINE =================
 
   function resolveText(str) { return AppState.resolveText(str); }
@@ -379,8 +427,21 @@ const Story = (function () {
     return STORY[threadId] && STORY[threadId][nodeId];
   }
 
+  // Where does this thread's progress ({nodeId, ended, revealedCount,
+  // awaiting, effectsRan}) actually live? For any of the 10 baked-in
+  // characters it's characters[id].story (built in core/state.js,
+  // Langkah 1); for anything else (currently just the legacy
+  // `assistant` tutorial thread) it's the older story.threads[id].
+  // Centralizing the redirect here means setNode/bumpRevealed/
+  // setAwaiting/effects all automatically work for both without
+  // needing their own if/else. See RANCANGAN_MULTI_KARAKTER.md §1.
+  function threadSlot(s, threadId) {
+    if (CHARACTERS[threadId]) return s.characters[threadId].story;
+    return s.story.threads[threadId];
+  }
+
   function threadState(threadId) {
-    return AppState.get().story.threads[threadId];
+    return threadSlot(AppState.get(), threadId);
   }
 
   // move a thread onto a new node, resetting its "how much of this
@@ -428,7 +489,8 @@ const Story = (function () {
         case 'endThread': {
           delete s.chats[fx.threadId];
           s.contacts = s.contacts.filter(c => c.id !== fx.threadId);
-          if (s.story.threads[fx.threadId]) s.story.threads[fx.threadId].ended = true;
+          const ts = threadSlot(s, fx.threadId);
+          if (ts) ts.ended = true;
           break;
         }
 
@@ -461,7 +523,7 @@ const Story = (function () {
         // a time-skip). The rest of that node's content, if any, still
         // waits for the player via `holdUntilTap`/next like normal.
         case 'deliverFirstLine': {
-          const ts = s.story.threads[fx.threadId];
+          const ts = threadSlot(s, fx.threadId);
           const chat = s.chats[fx.threadId];
           if (!ts || !chat) break;
           const node = STORY[fx.threadId] && STORY[fx.threadId][ts.nodeId];
@@ -473,6 +535,23 @@ const Story = (function () {
           ts.awaiting = node.holdUntilTap ? 'tap' : null;
           const contact = s.contacts.find(c => c.id === fx.threadId);
           if (contact) contact.isNew = true; // (re)flag as unread — this is new content arriving
+          break;
+        }
+
+        // add ALL 10 baked-in characters to Contacts/DashChat at once —
+        // idempotent (skips anyone already introduced, so re-running
+        // this effect is harmless). Deliberately silent (isNew: false,
+        // no notification): this represents "these people are now in
+        // your phone", not "they just messaged you" — the player has
+        // full freedom to start any of these 10 conversations whenever
+        // they want, see RANCANGAN_MULTI_KARAKTER.md §1.
+        case 'introduceAllCharacters': {
+          allCharacterIds().forEach(id => {
+            if (s.chats[id]) return; // already introduced
+            const def = CHARACTERS[id];
+            s.contacts.push({ id, name: def.name, avatar: def.avatar, lastUpdate: '', isNew: false });
+            s.chats[id] = { name: def.name, messages: [] };
+          });
           break;
         }
 

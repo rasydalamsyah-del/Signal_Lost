@@ -345,6 +345,39 @@ jadi tidak ada kerjaan tambahan — lanjut ke Langkah 5.
   update live pas stat berubah. jsdom di-install sementara buat tes,
   lalu dihapus lagi (`node_modules`/`package.json` gak ikut commit).
 
-### ⏭️ Langkah 6 — Contacts & DashChat wiring ke 10 karakter (belum dikerjakan — termasuk migrasi konten lama)
+### ✅ Langkah 6 — Contacts & DashChat wiring ke 10 karakter (selesai)
+- **`core/story.js`**: tambah `threadSlot(s, threadId)` — penentu satu
+  tempat, dipakai di `threadState`/`setNode`/`bumpRevealed`/
+  `setAwaiting`/efek `endThread`/`deliverFirstLine`: kalau `threadId`
+  salah satu dari 10 karakter, progres cerita dibaca/ditulis di
+  `characters[id].story` (dari Langkah 1); kalau bukan (cuma
+  `assistant` yang tersisa), tetap ke `story.threads` lama. Jadi engine
+  yang sama otomatis jalan buat kontak lama maupun 10 karakter baru
+  tanpa app lain (dashchat.js, contacts.js) perlu tau bedanya —
+  keduanya sudah generik dari awal (baca `s.contacts`/`s.chats` polos),
+  jadi TIDAK PERLU diubah sama sekali.
+- Effect baru **`introduceAllCharacters`** — nambah 10 karakter
+  sekaligus ke `contacts`+`chats` pakai nama/avatar dari
+  `core/characters.js`, idempoten (skip yang udah ada), senyap
+  (`isNew:false`, gak ada notifikasi) — sesuai prinsip "pemain bebas
+  mulai chat siapa aja kapan aja", bukan "mereka baru chat kamu".
+  Disambungkan ke `a_farewell` — begitu tutorial Asisten kelar, 10
+  kontak langsung muncul, menuntaskan janji di baris farewell.
+- **Starter stub dialog buat 10 karakter** (`{id}_start` →
+  `{id}_intro_choice` → cabang nyata → `{id}_stub_end` jalan buntu) —
+  PLACEHOLDER, bukan konten final (itu Langkah 8). Tujuannya: biar
+  seluruh pipeline (kontak → buka chat → pilihan → efek `adjustStat`/
+  `revealIdentity` → tampil di app Diri) punya sesuatu nyata buat
+  dijalankan sekarang, bukan nunggu semua 10 karakter selesai ditulis
+  dulu. Node id sama dipakai lagi nanti pas ditulis ulang beneran, jadi
+  gampang diganti tanpa ubah apa pun di luar `core/story.js`.
+- Sudah divalidasi: `node --check` + **integrasi penuh pakai jsdom**
+  (bukan cuma unit test) — dari akhir tutorial Asisten → 10 kontak
+  muncul senyap & idempoten → buka chat Nadia via `Router.navigate`
+  beneran → opener & pilihan ke-render di DOM sungguhan → klik pilihan
+  → `trust +5` & `revealIdentity('pekerjaan','Barista')` beneran
+  kejadian & keliatan di teks layar → app Kontak ikut nunjukkin 10
+  kontak yang sama. jsdom di-install sementara, dihapus lagi setelahnya.
+
 ### ⏭️ Langkah 7 — Job system (belum dikerjakan)
 ### ⏭️ Langkah 8 — Konten penuh per karakter (belum dikerjakan)
