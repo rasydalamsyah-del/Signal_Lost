@@ -410,62 +410,62 @@ jadi tidak ada kerjaan tambahan — lanjut ke Langkah 5.
   bug di skrip tes sendiri (salah cari frasa), sudah dikoreksi dan
   diverifikasi ulang — bukan bug di kode game.
 
-### 🔶 Langkah 8 — Konten penuh per karakter (6/10 selesai: Nadia, Kirana, Salsa, Bagas, Raka, Fahri)
+### ✅ Langkah 8 — Konten penuh per karakter (SELESAI: 10/10)
 Sesuai kesepakatan build-order ("kerangka teknis 10 penuh dari awal,
-konten bertahap"), 6 karakter pertama sudah ditulis dalam & lengkap
-menggantikan stub generik-nya; 4 sisanya masih pakai stub generik
-dari Langkah 6 sampai gilirannya masing-masing.
+konten bertahap"), sekarang **semua 10 karakter** sudah ditulis dalam
+& lengkap, gantiin stub generik dari Langkah 6 sepenuhnya.
 
-- **Nadia** (barista, ceria/banyak becanda) — `core/story.js`
-  `STORY.char_nadia` ditulis ulang total (11 node): pilihan gaya
-  ngobrol (basa-basi/to-the-point) → reveal pekerjaan → pilihan hobi
-  (opsi flirty naikin `love` + memicu `rivalRipple` ke rival
-  sesama-gender) → reveal hobi (Fotografi Analog) → tawaran mini-job
-  (barista) → penutup hangat. Mini-job dia yang jadi trigger nyata buat
-  demo overlap-profesi Dimas (Langkah 7).
-- **Kirana** (desainer grafis, tertutup/dry, perfeksionis) — vibe
-  sengaja beda total dari Nadia sesuai arahan "campuran, tiap karakter
-  beda vibe". `STORY.char_kirana` (13 node): dia gak langsung cair —
-  pilihan yang ngasih ruang ("chat nanti aja") naikin trust, yang
-  maksa malah nurunin trust & mood. Vent soal kerjaan → pilihan
-  dukungan emosional vs saran teknis (dua jalur trust beda) → reveal
-  hobi (Menggambar Digital) → tawaran mini-job (desainer) → penutup,
-  dengan `globalRipple` di milestone-nya (gerbang `trust>=15`).
-- **Salsa** (mahasiswa, cemas/overthinking, butuh validasi) —
-  `STORY.char_salsa` (13 node): beda lagi — dia kebuka dari awal
-  (gak kayak Kirana), tapi ngomongnya nervous & suka minta maaf
-  duluan. Vent soal presentasi → pilihan validasi-emosional vs
-  saran-praktis (dua jalur trust beda) → reveal hobi (Menulis Jurnal)
-  → mini-job asisten riset (job baru: "Asisten Riset").
-- **Bagas** (montir, santai/simpel, dikit ngomong) — kebalikan Salsa:
-  gak nervous, gak butuh divalidasi. `STORY.char_bagas` (11 node):
-  pilihan chill vs curious → reveal pekerjaan → reveal hobi
-  (Modifikasi Motor Klasik) → mini-job bengkel.
-- **Raka** (fotografer, reflektif/pengamat, perayu halus) —
-  `STORY.char_raka` (11 node): notice hal-hal kecil tentang lawan
-  bicara, bukan gombalan langsung; pilihan terbuka soal detail-detail
-  kecil (naikin trust+love) vs to-the-point → reveal hobi (Fotografi
-  Jalanan) → mini-job asisten fotografer (job baru: "Asisten
-  Fotografer").
-- **Fahri** (guru, hangat/mentor, dad-joke energy) — `STORY.char_fahri`
-  (12 node): suka kasih nasihat (kadang gak diminta), pilihan
-  didengerin-dulu vs boleh-langsung-saran, vent soal ngajar → reveal
-  hobi (Membaca Filosofi) → mini-job bantu bazar sekolah (job baru:
-  "Asisten Pengajar").
+- **Nadia** (barista, ceria/banyak becanda) — 11 node: pilihan gaya
+  ngobrol → reveal pekerjaan → pilihan hobi flirty (naikin `love` +
+  `rivalRipple`) → reveal hobi (Fotografi Analog) → mini-job barista
+  (trigger nyata buat overlap-profesi Dimas, Langkah 7).
+- **Kirana** (desainer grafis, tertutup/dry, perfeksionis) — 13 node:
+  gak langsung cair, pilihan ngasih-ruang vs maksa beda efek
+  trust/mood, vent kerjaan, mini-job desainer + `globalRipple`.
+- **Salsa** (mahasiswa, cemas/overthinking, butuh validasi) — 13 node:
+  kebuka dari awal tapi nervous, pilihan validasi-emosional vs
+  saran-praktis, mini-job asisten riset (job baru: "Asisten Riset").
+- **Bagas** (montir, santai/simpel, dikit ngomong) — 11 node:
+  kebalikan Salsa, pilihan chill vs curious, mini-job bengkel.
+- **Raka** (fotografer, reflektif/pengamat, perayu halus) — 11 node:
+  notice detail kecil bukan gombalan langsung, mini-job asisten
+  fotografer (job baru: "Asisten Fotografer").
+- **Fahri** (guru, hangat/mentor, dad-joke energy) — 12 node: suka
+  kasih nasihat, mini-job bantu bazar sekolah (job baru: "Asisten
+  Pengajar").
+- **Bella** (penyiar radio, ceria di publik beda saat pribadi) —
+  13 node: kontras on-air vs off-air, vent soal capek "on" terus,
+  mini-job baca naskah promo (job baru: "Asisten Siaran").
+- **Intan** (apoteker, tenang/perhatian lewat hal kecil) — 13 node:
+  perhatian lewat tindakan praktis (nanya udah makan belum), vent
+  soal pasien, mini-job cek stok obat (job baru: "Asisten Apotek").
+- **Aldo** (musisi indie, santai/filosofis, skeptis validasi) — 13
+  node: gak nyari pujian, vent soal tekanan angka streaming, mini-job
+  jadi additional player manggung (job baru: "Musisi Pendukung").
+- **Dimas** (barista, playful/pede, gerbang overlap tetap dipakai) —
+  13 node: `char_dimas_job_gate`/`char_dimas_overlap_greet` dari
+  Langkah 7 TIDAK diubah, cuma jalur normalnya (`intro_choice` dst)
+  yang ditulis ulang jadi konten asli — tebak-tebakan hobi (Basket),
+  mini-job bikin konten promo kedai (job title "Barista", sama kayak
+  jobnya sendiri).
 - Sudah divalidasi tiap tambahan: `node --check` + **audit graf node**
-  (BFS dari node awal tiap thread yang baru DAN yang lama, 0 referensi
-  rusak) + **integrasi DOM penuh pakai jsdom** — jalanin jalur lengkap
-  via klik tombol sungguhan, verifikasi semua angka stat/identity/uang
-  sesuai perhitungan manual (termasuk saldo awal 150rb yang harus
-  diperhitungkan). **Aturan "job cuma menetap sekali" (Langkah 7)
-  terus dites ulang tiap nambah karakter baru** — sekarang terbukti
-  konsisten lintas 6 karakter berturut-turut (job pertama yang
-  di-"ambil" — dari Nadia — tidak pernah ketiban job lain dari
-  Kirana/Salsa/Bagas/Raka/Fahri walau semua mini-job-nya diterima).
-  `rivalRipple` (cuma sesama-gender) vs `globalRipple` (semua
-  karakter) juga dikonfirmasi ulang berperilaku beda sesuai desain.
-  Regresi ke seluruh konten yang udah ada juga dicek tiap kali, aman
-  tidak kesenggol.
-- Sisa 4 karakter (Bella, Intan, Aldo — plus Dimas yang masih perlu
-  naskah utuh di luar gerbang overlap-nya) masih pakai stub generik,
-  nunggu giliran ditulis di sesi berikutnya.
+  (BFS dari node awal tiap thread — 0 referensi rusak buat SEMUA 10
+  karakter + verifikasi eksplisit gerbang overlap Dimas masih nyambung
+  benar ke konten barunya) + **integrasi DOM penuh pakai jsdom** untuk
+  tiap batch karakter baru — jalanin jalur lengkap via klik tombol
+  sungguhan, verifikasi semua angka stat/identity/uang sesuai
+  perhitungan manual. **Aturan "job cuma menetap sekali" (Langkah 7)
+  dites ulang tiap nambah karakter baru** — terbukti konsisten lintas
+  SEMUA 10 karakter berturut-turut (job pertama yang diambil — dari
+  Nadia — tidak pernah ketiban job lain dari 9 karakter lainnya,
+  termasuk Dimas yang job-nya sama persis "Barista"). `rivalRipple`
+  (cuma sesama-gender) vs `globalRipple` (semua karakter) juga
+  dikonfirmasi ulang berperilaku beda sesuai desain di tiap batch.
+  Regresi ke seluruh konten yang udah ada dicek tiap kali nambah
+  karakter baru, aman tidak kesenggol sama sekali sepanjang proses.
+
+**Dengan ini, seluruh 8 langkah di rancangan sudah selesai
+diimplementasikan dan divalidasi.** Sistem multi-karakter (10 kontak
+bebas dipilih, waktu ambient, efek indikator 2-lapis, neglect score,
+job system, app Diri, dan naskah penuh semua karakter) sudah jalan
+end-to-end dari fondasi data sampai konten.

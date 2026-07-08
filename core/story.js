@@ -1026,6 +1026,398 @@ const Story = (function () {
     }
   };
 
+  // ---------------------------------------------------------
+  // BELLA — penyiar radio, pede & ceria di depan "publik", tapi
+  // beda banget pas lagi gak siaran. Beda dari yang lain: dia
+  // sengaja nunjukkin dua sisi (on-air vs off-air) sebagai bagian
+  // dari gimana dia kebuka ke pemain.
+  // ---------------------------------------------------------
+  STORY.char_bella = {
+    char_bella_start: {
+      lines: ['HALOO~ eh maaf, kebiasaan gaya siaran wkwk', 'kontak baru ya? oke, mode santai aku aktifin'],
+      next: 'char_bella_vibe_choice'
+    },
+    char_bella_vibe_choice: {
+      lines: ['kamu tau aku dari mana emangnya, denger siaran apa emang random doang?'],
+      choices: [
+        {
+          label: 'Aku dengerin! Suara kamu enak didenger.',
+          next: 'char_bella_after_fan',
+          effects: [
+            { type: 'adjustStat', target: 'char_bella', stat: 'love', delta: 3 },
+            { type: 'adjustStat', target: 'char_bella', stat: 'trust', delta: 2 }
+          ]
+        },
+        {
+          label: 'Gak denger radio sih, tapi kayaknya kerjaan kamu asik.',
+          next: 'char_bella_after_curious',
+          effects: [{ type: 'adjustStat', target: 'char_bella', stat: 'trust', delta: 4 }]
+        }
+      ]
+    },
+    char_bella_after_fan: {
+      lines: ['eh makasih! jarang ada yang bilang gitu langsung ke aku wkwk', 'biasanya orang cuma denger doang, gak pernah bilang'],
+      next: 'char_bella_reveal_job'
+    },
+    char_bella_after_curious: {
+      lines: ['asik kok, tapi capek juga sih kadang.', 'kamu bakal tau kenapa bentar lagi wkwk'],
+      next: 'char_bella_reveal_job'
+    },
+    char_bella_reveal_job: {
+      lines: ['aku penyiar radio, di radio lokal gitu.', 'tiap hari kudu "on" terus di depan mic, ceria walau lagi capek sekalipun'],
+      effects: [{ type: 'revealIdentity', target: 'char_bella', field: 'pekerjaan', value: 'Penyiar Radio' }],
+      next: 'char_bella_offair_vent'
+    },
+    char_bella_offair_vent: {
+      lines: ['orang kira aku emang pede banget karna kerjaan.', 'tapi off-air aku tuh... beda banget, lebih pendiam malah'],
+      choices: [
+        {
+          label: 'Wajar kok, capek juga kali jadi "on" terus.',
+          next: 'char_bella_after_validate',
+          effects: [
+            { type: 'adjustStat', target: 'char_bella', stat: 'trust', delta: 5 },
+            { type: 'adjustStat', target: 'char_bella', stat: 'love', delta: 2 }
+          ]
+        },
+        {
+          label: 'Justru unik menurutku, dua sisi gitu.',
+          next: 'char_bella_after_curious2',
+          effects: [{ type: 'adjustStat', target: 'char_bella', stat: 'trust', delta: 4 }]
+        }
+      ]
+    },
+    char_bella_after_validate: {
+      lines: ['...makasih ya. jarang ada yang notice capeknya, biasanya cuma liat versi ceria doang'],
+      next: 'char_bella_reveal_hobby'
+    },
+    char_bella_after_curious2: {
+      lines: ['hehe, belum ada yang bilang gitu ke aku sih.', 'tapi ya gitu, dua-duanya emang aku kok'],
+      next: 'char_bella_reveal_hobby'
+    },
+    char_bella_reveal_hobby: {
+      lines: ['di luar siaran, aku suka nulis lirik lagu buat diri sendiri.', 'gak pernah dibacain di radio sih, ini beneran cuma buat aku doang'],
+      effects: [{ type: 'revealIdentity', target: 'char_bella', field: 'hobi', value: 'Menulis Lirik' }],
+      next: 'char_bella_minijob_offer'
+    },
+    char_bella_minijob_offer: {
+      lines: ['eh, stasiun radio lagi butuh orang buat bacain naskah promo, isi suara doang.', 'mau coba gak? gampang kok tinggal baca'],
+      choices: [
+        {
+          label: 'Boleh, coba deh.',
+          next: 'char_bella_minijob_done',
+          effects: [{ type: 'completeMiniJob', reward: 50000, jobTitle: 'Asisten Siaran' }]
+        },
+        { label: 'Kayaknya nggak PD deh buat itu.', next: 'char_bella_minijob_decline' }
+      ]
+    },
+    char_bella_minijob_done: {
+      lines: ['asik, makasih banyak ya! suaramu enak juga ternyata.', 'kamu harusnya nyoba siaran beneran deh'],
+      effects: [
+        { type: 'adjustStat', target: 'char_bella', stat: 'love', delta: 5 },
+        { type: 'rivalRipple', source: 'char_bella', targetStat: 'jealousy', delta: 3 }
+      ],
+      next: 'char_bella_milestone'
+    },
+    char_bella_minijob_decline: {
+      lines: ['oke gapapa kok, gak semua orang emang harus di depan mic wkwk'],
+      next: 'char_bella_milestone'
+    },
+    char_bella_milestone: {
+      // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
+      lines: ['makasih ya udah liat versi aku yang gak di depan mic.', 'chat-chat lagi ya, aku available kok kalo gak lagi siaran'],
+      effects: [{ type: 'globalRipple', source: 'char_bella', condition: { stat: 'love', gte: 8 }, targetStat: 'jealousy', delta: 2 }]
+    }
+  };
+
+  // ---------------------------------------------------------
+  // INTAN — apoteker, tenang & teliti, perhatian lewat hal-hal
+  // kecil/praktis (bukan kata-kata manis). Beda dari yang lain:
+  // dia "notice" kebutuhan orang duluan sebelum diminta.
+  // ---------------------------------------------------------
+  STORY.char_intan = {
+    char_intan_start: {
+      lines: ['halo. eh, kamu udah makan belum?', 'maaf langsung nanya gitu, kebiasaan kali ya wkwk'],
+      next: 'char_intan_vibe_choice'
+    },
+    char_intan_vibe_choice: {
+      lines: ['abaikan pertanyaan tadi kalo aneh. kamu lagi ngapain emangnya?'],
+      choices: [
+        {
+          label: 'Belum makan sih, ketauan aja hehe.',
+          next: 'char_intan_after_honest',
+          effects: [
+            { type: 'adjustStat', target: 'char_intan', stat: 'love', delta: 3 },
+            { type: 'adjustStat', target: 'char_intan', stat: 'trust', delta: 2 }
+          ]
+        },
+        {
+          label: 'Udah kok, tenang aja.',
+          next: 'char_intan_after_reassure',
+          effects: [{ type: 'adjustStat', target: 'char_intan', stat: 'trust', delta: 4 }]
+        }
+      ]
+    },
+    char_intan_after_honest: {
+      lines: ['nah kan, makan dulu gih.', 'aku gabisa santai kalo tau ada yang belum makan wkwk'],
+      next: 'char_intan_reveal_job'
+    },
+    char_intan_after_reassure: {
+      lines: ['oke syukurlah.', 'maaf ya, emang kebiasaan kerjaan kali jadi suka natanya gitu ke orang'],
+      next: 'char_intan_reveal_job'
+    },
+    char_intan_reveal_job: {
+      lines: ['aku apoteker btw, kerja di apotek deket sini.', 'kerjaan detail banget, salah dikit bisa fatal, jadi kebawa ke kehidupan sehari-hari juga'],
+      effects: [{ type: 'revealIdentity', target: 'char_intan', field: 'pekerjaan', value: 'Apoteker' }],
+      next: 'char_intan_vent'
+    },
+    char_intan_vent: {
+      lines: ['td ada pasien gak minum obat sesuai aturan, padahal udah dijelasin detail.', 'kadang kesel juga, tapi ya... itu emang demi mereka sendiri sih'],
+      choices: [
+        {
+          label: 'Kamu emang perhatian banget ya sama orang lain.',
+          next: 'char_intan_after_praise',
+          effects: [
+            { type: 'adjustStat', target: 'char_intan', stat: 'love', delta: 4 },
+            { type: 'adjustStat', target: 'char_intan', stat: 'trust', delta: 3 }
+          ]
+        },
+        {
+          label: 'Wajar sih kesel, tapi kamu emang niatnya baik kok.',
+          next: 'char_intan_after_validate2',
+          effects: [{ type: 'adjustStat', target: 'char_intan', stat: 'trust', delta: 5 }]
+        }
+      ]
+    },
+    char_intan_after_praise: {
+      lines: ['ah, gitu ya... jarang ada yang notice sih.', 'makasih ya udah bilang gitu'],
+      next: 'char_intan_reveal_hobby'
+    },
+    char_intan_after_validate2: {
+      lines: ['iya, itu yang aku pegang terus sih.', 'makasih udah ngerti maksudku'],
+      next: 'char_intan_reveal_hobby'
+    },
+    char_intan_reveal_hobby: {
+      lines: ['di luar kerja, aku suka berkebun herbal kecil-kecilan di rumah.', 'seneng aja liat sesuatu tumbuh dari yang aku rawat sendiri'],
+      effects: [{ type: 'revealIdentity', target: 'char_intan', field: 'hobi', value: 'Berkebun Herbal' }],
+      next: 'char_intan_minijob_offer'
+    },
+    char_intan_minijob_offer: {
+      lines: ['eh, apotek lagi butuh orang bantuin cek stok obat, entry data doang.', 'mau bantuin gak? simpel kok, tinggal teliti dikit'],
+      choices: [
+        {
+          label: 'Boleh, aku bantuin.',
+          next: 'char_intan_minijob_done',
+          effects: [{ type: 'completeMiniJob', reward: 45000, jobTitle: 'Asisten Apotek' }]
+        },
+        { label: 'Kayaknya lagi nggak sempet deh.', next: 'char_intan_minijob_decline' }
+      ]
+    },
+    char_intan_minijob_done: {
+      lines: ['makasih banyak ya, rapi banget kerjanya.', 'ini buat kamu, jangan ditolak ya'],
+      effects: [
+        { type: 'adjustStat', target: 'char_intan', stat: 'love', delta: 4 },
+        { type: 'rivalRipple', source: 'char_intan', targetStat: 'jealousy', delta: 3 }
+      ],
+      next: 'char_intan_milestone'
+    },
+    char_intan_minijob_decline: {
+      lines: ['oke gapapa kok, jangan lupa istirahat ya walau lagi sibuk'],
+      next: 'char_intan_milestone'
+    },
+    char_intan_milestone: {
+      // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
+      lines: ['makasih ya udah mau ngobrol sama aku.', 'kalo butuh apa-apa, chat aja — aku orangnya seneng dimintain tolong kok'],
+      effects: [{ type: 'globalRipple', source: 'char_intan', condition: { stat: 'trust', gte: 15 }, targetStat: 'jealousy', delta: 2 }]
+    }
+  };
+
+  // ---------------------------------------------------------
+  // ALDO — musisi indie, santai tapi filosofis, agak skeptis soal
+  // validasi/angka. Beda dari yang lain: dia gak nyari pujian —
+  // responsnya lebih hangat ke yang MENGERTI filosofinya daripada
+  // yang cuma muji doang.
+  // ---------------------------------------------------------
+  STORY.char_aldo = {
+    char_aldo_start: {
+      lines: ['yo.', 'kontak baru. santai aja, gak perlu formal-formal'],
+      next: 'char_aldo_vibe_choice'
+    },
+    char_aldo_vibe_choice: {
+      lines: ['kamu tau aku musisi, atau emang cuma nyasar doang ke kontak ini?'],
+      choices: [
+        {
+          label: 'Tau, keren deh bisa jadi musisi.',
+          next: 'char_aldo_after_compliment',
+          effects: [{ type: 'adjustStat', target: 'char_aldo', stat: 'trust', delta: 2 }]
+        },
+        {
+          label: 'Random aja, tapi ya udah, hai.',
+          next: 'char_aldo_after_neutral',
+          effects: [{ type: 'adjustStat', target: 'char_aldo', stat: 'trust', delta: 4 }]
+        }
+      ]
+    },
+    char_aldo_after_compliment: {
+      lines: ['makasih, tapi jangan buru-buru bilang keren.', 'belum tentu kamu udah denger musikku kan wkwk'],
+      next: 'char_aldo_reveal_job'
+    },
+    char_aldo_after_neutral: {
+      lines: ['nah, ini yang aku suka.', 'gak ada ekspektasi aneh-aneh dari awal'],
+      next: 'char_aldo_reveal_job'
+    },
+    char_aldo_reveal_job: {
+      lines: ['aku musisi indie, main di kafe-kafe kecil doang sih.', 'belum "meledak", dan jujur gak yakin juga pengen gitu'],
+      effects: [{ type: 'revealIdentity', target: 'char_aldo', field: 'pekerjaan', value: 'Musisi Indie' }],
+      next: 'char_aldo_vent'
+    },
+    char_aldo_vent: {
+      lines: ['orang suka nanya "kapan viral", "kapan streaming-nya rame".', 'kayak itu doang yang jadi ukuran karya bagus apa nggak'],
+      choices: [
+        {
+          label: 'Yang penting karyanya jujur, bukan soal angka.',
+          next: 'char_aldo_after_philosophy',
+          effects: [
+            { type: 'adjustStat', target: 'char_aldo', stat: 'trust', delta: 5 },
+            { type: 'adjustStat', target: 'char_aldo', stat: 'love', delta: 3 }
+          ]
+        },
+        {
+          label: 'Tapi wajar juga sih pengen diakui, itu manusiawi.',
+          next: 'char_aldo_after_normalize',
+          effects: [{ type: 'adjustStat', target: 'char_aldo', stat: 'trust', delta: 4 }]
+        }
+      ]
+    },
+    char_aldo_after_philosophy: {
+      lines: ['...nah, ini baru ngerti.', 'jarang ada yang bilang gitu, biasanya malah nyuruh aku "usaha lebih"'],
+      next: 'char_aldo_reveal_hobby'
+    },
+    char_aldo_after_normalize: {
+      lines: ['heh, itu juga bener sih sebenernya.', 'kadang aku juga lupa kalo pengen diakui tuh wajar, bukan lemah'],
+      next: 'char_aldo_reveal_hobby'
+    },
+    char_aldo_reveal_hobby: {
+      lines: ['di luar main musik, aku suka koleksi piringan hitam lawas.', 'gak semua buat didengerin sih, kadang cuma suka liat covernya doang'],
+      effects: [{ type: 'revealIdentity', target: 'char_aldo', field: 'hobi', value: 'Koleksi Vinyl' }],
+      next: 'char_aldo_minijob_offer'
+    },
+    char_aldo_minijob_offer: {
+      lines: ['eh, aku butuh additional player buat manggung kecil minggu ini.', 'gampang kok, cuma isi bagian ringan doang. mau coba?'],
+      choices: [
+        {
+          label: 'Boleh, gas coba.',
+          next: 'char_aldo_minijob_done',
+          effects: [{ type: 'completeMiniJob', reward: 60000, jobTitle: 'Musisi Pendukung' }]
+        },
+        { label: 'Kayaknya gak jago musik deh.', next: 'char_aldo_minijob_decline' }
+      ]
+    },
+    char_aldo_minijob_done: {
+      lines: ['nice, makasih banyak ya. lumayan seru manggung bareng.', 'ini bayarannya, jangan diitung-itung amat, santai aja'],
+      effects: [
+        { type: 'adjustStat', target: 'char_aldo', stat: 'love', delta: 5 },
+        { type: 'rivalRipple', source: 'char_aldo', targetStat: 'jealousy', delta: 3 }
+      ],
+      next: 'char_aldo_milestone'
+    },
+    char_aldo_minijob_decline: {
+      lines: ['santai, gapapa kok. gak semua orang harus jago manggung'],
+      next: 'char_aldo_milestone'
+    },
+    char_aldo_milestone: {
+      // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
+      lines: ['lumayan asik juga ngobrol sama kamu.', 'jarang ada yang ngerti filosofi random gini, chat-chat lagi ya'],
+      effects: [{ type: 'globalRipple', source: 'char_aldo', condition: { stat: 'trust', gte: 9 }, targetStat: 'jealousy', delta: 2 }]
+    }
+  };
+
+  // ---------------------------------------------------------
+  // DIMAS — barista, playful/pede, suka ngegodain becanda tapi
+  // gak annoying. Beda dari Nadia (ceria-hangat): dia lebih ke
+  // "confident tease", nantang dikit sebelum kebuka. Job_gate +
+  // overlap_greet dari Langkah 7 tetap dipakai — cuma jalur
+  // normalnya (kalau overlap belum kejadian) yang ditulis di sini.
+  // ---------------------------------------------------------
+  STORY.char_dimas.char_dimas_start = {
+    lines: ['woy, kontak baru nih ceritanya?', 'jangan kaget kalo aku agak berisik, emang gini orangnya'],
+    next: 'char_dimas_job_gate'
+  };
+  // char_dimas_job_gate & char_dimas_overlap_greet TETAP seperti
+  // yang sudah dibangun di Langkah 7 (skipTo jobOverlap) — tidak
+  // diubah, cuma target akhirnya (char_dimas_intro_choice) sekarang
+  // konten asli, bukan stub generik lagi.
+  STORY.char_dimas.char_dimas_intro_choice = {
+    lines: ['jadi, mau kenalan formal apa langsung asik-asikan aja?'],
+    choices: [
+      {
+        label: 'Langsung asik-asikan aja.',
+        next: 'char_dimas_after_playful',
+        effects: [
+          { type: 'adjustStat', target: 'char_dimas', stat: 'trust', delta: 3 },
+          { type: 'adjustStat', target: 'char_dimas', stat: 'love', delta: 2 }
+        ]
+      },
+      {
+        label: 'Formal dulu deh, pelan-pelan.',
+        next: 'char_dimas_after_formal',
+        effects: [{ type: 'adjustStat', target: 'char_dimas', stat: 'trust', delta: 4 }]
+      }
+    ]
+  };
+  STORY.char_dimas.char_dimas_after_playful = {
+    lines: ['nah, ini baru enak.', 'aku emang paling males basa-basi kelamaan'],
+    next: 'char_dimas_reveal_job'
+  };
+  STORY.char_dimas.char_dimas_after_formal = {
+    lines: ['oke, santai aja, gak masalah.', 'pelan-pelan juga gapapa kok'],
+    next: 'char_dimas_reveal_job'
+  };
+  STORY.char_dimas.char_dimas_reveal_job = {
+    lines: ['kerjaanku barista, kerjaan sambil ngoceh doang tiap hari.', 'enak sih, sambil kerja sambil ketemu orang baru terus'],
+    effects: [{ type: 'revealIdentity', target: 'char_dimas', field: 'pekerjaan', value: 'Barista' }],
+    next: 'char_dimas_ask_hobby'
+  };
+  STORY.char_dimas.char_dimas_ask_hobby = {
+    lines: ['coba tebak dong hobiku apa.'],
+    choices: [
+      { label: 'Basket?', next: 'char_dimas_hobby_reveal' },
+      { label: 'Nyerah deh, kasih tau aja.', next: 'char_dimas_hobby_reveal' }
+    ]
+  };
+  STORY.char_dimas.char_dimas_hobby_reveal = {
+    lines: ['basket! bener juga tebakannya wkwk', 'main tiap minggu bareng temen-temen, lumayan buat lepas capek kerja'],
+    effects: [{ type: 'revealIdentity', target: 'char_dimas', field: 'hobi', value: 'Basket' }],
+    next: 'char_dimas_minijob_offer'
+  };
+  STORY.char_dimas.char_dimas_minijob_offer = {
+    lines: ['eh, kedai tempatku kerja lagi butuh orang bantuin bikin konten promo buat sosmed.', 'gampang kok, foto-foto doang. mau bantuin?'],
+    choices: [
+      {
+        label: 'Boleh, gas bantuin.',
+        next: 'char_dimas_minijob_done',
+        effects: [{ type: 'completeMiniJob', reward: 55000, jobTitle: 'Barista' }]
+      },
+      { label: 'Kayaknya lagi nggak sempet deh.', next: 'char_dimas_minijob_decline' }
+    ]
+  };
+  STORY.char_dimas.char_dimas_minijob_done = {
+    lines: ['nice, makasih banyak ya! hasil fotonya bagus juga.', 'ini upahnya, jangan sungkan'],
+    effects: [
+      { type: 'adjustStat', target: 'char_dimas', stat: 'love', delta: 5 },
+      { type: 'rivalRipple', source: 'char_dimas', targetStat: 'jealousy', delta: 3 }
+    ],
+    next: 'char_dimas_milestone'
+  };
+  STORY.char_dimas.char_dimas_minijob_decline = {
+    lines: ['santai aja, lain kali kalo sempet.'],
+    next: 'char_dimas_milestone'
+  };
+  STORY.char_dimas.char_dimas_milestone = {
+    // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
+    lines: ['lumayan seru ngobrol sama kamu, gak nyangka.', 'chat-chat lagi ya, aku available kok kalo lagi gak sibuk bikin kopi'],
+    effects: [{ type: 'globalRipple', source: 'char_dimas', condition: { stat: 'love', gte: 7 }, targetStat: 'jealousy', delta: 2 }]
+  };
+
   // ================= ENGINE =================
 
   function resolveText(str) { return AppState.resolveText(str); }
