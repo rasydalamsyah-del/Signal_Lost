@@ -12,8 +12,8 @@ const Router = (function () {
   const island = () => document.getElementById('dynamic-island');
 
   const CHROMELESS = new Set(['start', 'boot', 'lock']);
-  const NAV_HIDDEN = new Set(['timeSkip']); // status bar stays visible (clock needs to show), nav bar hides so the cutscene can't be backed out of
-  const SYSTEM_SCREENS = new Set(['start', 'boot', 'lock', 'home', 'recent', 'timeSkip']);
+  const NAV_HIDDEN = new Set(['timeSkip', 'sleep']); // status bar stays visible (clock needs to show), nav bar hides so the cutscene can't be backed out of
+  const SYSTEM_SCREENS = new Set(['start', 'boot', 'lock', 'home', 'recent', 'timeSkip', 'sleep']);
 
   let history = [];      // stack of { id, render }
   let recentApps = [];   // for the "Recent Apps" screen: { id, name, time }

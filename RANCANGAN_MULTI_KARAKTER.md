@@ -595,6 +595,27 @@ loop harian yang jelas.
   bulan 2 tanggal 16, Kamis) — bukan cuma hitung manual di luar sistem.
 
 3. **Tidur/bangun** (§11.5) — mekanisme baru, pakai stat `energi`
+
+**✅ SELESAI (implementasi):**
+- **`screens/sleepScreen.js`** (baru) — cutscene tidur, visual sengaja
+  beda dari `timeSkip.js`: layar gelap (`#05060a`), ikon bulan
+  mengambang pelan (animasi `sleepFloat`), teks ".. zzz .." bergantian
+  halus, jam kecil di-dim (bukan jam besar terang). Selalu lompat ke
+  **07:00 hari BERIKUTNYA** — walau dipicu siang hari (tidur siang),
+  tetap bangun besok paginya, bukan hari yang sama. Efek pas bangun:
+  `energi` pulih 100, `kebersihan` turun 15 (nunggu rutinitas pagi,
+  §11.6, buat pulihinnya lagi).
+- **`assets/icons.js`**: ikon `sleep` (bulan) + gradient ungu-biru.
+- **`screens/homeScreen.js`**: entry "Tidur" baru di grid.
+- **`core/router.js`**: `sleep` ditambahin ke `SYSTEM_SCREENS` (gaya
+  transisi) dan `NAV_HIDDEN` (nav bar hilang selama cutscene, sama
+  kayak `timeSkip` — gak bisa di-back tengah animasi).
+- Sudah divalidasi: `node --check` semua file + **integrasi DOM
+  penuh** — 3 skenario: (1) tidur malam jam 22:00 → bangun 07:00 hari
+  ke-2, energi 100, kebersihan 75; (2) tidur siang jam 10:00 → tetap
+  lompat ke 07:00 hari BERIKUTNYA (bukan hari sama); (3) nav bar
+  beneran hilang selama animasi berjalan.
+
 4. **Rutinitas harian** (§11.6) — konten baru, pakai SEMUA stat
    §11.2, nyambung ke tidur/bangun dari langkah 3
 5. **Kalender grid** (§11.4) — UI baru, pakai sistem tanggal §11.3

@@ -18,6 +18,7 @@
     { id: 'calendar', label: 'Kalender' },
     { id: 'diri', label: 'Diri' },
     { id: 'pekerjaan', label: 'Pekerjaan' },
+    { id: 'sleep', label: 'Tidur' },
     { id: 'settings', label: 'Pengaturan' }
   ];
 
