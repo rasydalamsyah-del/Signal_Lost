@@ -21,8 +21,8 @@
     { id: 'settings', label: 'Pengaturan' }
   ];
 
-  const DAY_NAMES = ['Minggu','Senin','Selasa','Rabu','Kamis',"Jum'at",'Sabtu'];
-  const MONTH_NAMES = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  // day/time text now comes from core/state.js's dayOfWeek() + AppState
+  // (in-game clock), not a real-device Date() — see render() below.
 
   function badgeFor(app) {
     const s = AppState.get();
@@ -42,13 +42,25 @@
   }
 
   function render(root) {
-    const now = new Date();
-    const dateStr = `${DAY_NAMES[now.getDay()]}, ${now.getDate()} ${MONTH_NAMES[now.getMonth()]}`;
+    // Home screen's big clock/date — this MUST use the in-game
+    // fictional clock (phone.time / meta.day), same as statusBar.js,
+    // dashchat.js message timestamps, and screens/timeSkip.js. Using
+    // the real device Date() here (as this used to) is what caused a
+    // real bug report: job schedules (core/jobs.js) are matched
+    // against the in-game weekday, so showing the REAL weekday here
+    // ("Kamis") while a job scheduled for "Senin/Jumat/Minggu" was
+    // still workable looked exactly like a scheduling bug, when it
+    // was actually just this display reading the wrong clock. See
+    // RANCANGAN_MULTI_KARAKTER.md §10.3 bug notes.
+    const s = AppState.get();
+    const t = s.phone.time;
+    const timeStr = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+    const dateStr = `${dayOfWeek(s.meta.day)}, Hari ke-${s.meta.day}`;
 
     root.innerHTML = `
       <div class="home-screen">
         <div class="home-time">
-          <div class="h-clock">${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}</div>
+          <div class="h-clock">${timeStr}</div>
           <div class="h-date">${dateStr}</div>
         </div>
         <div class="app-grid">

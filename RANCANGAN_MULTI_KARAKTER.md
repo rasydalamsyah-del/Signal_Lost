@@ -438,6 +438,37 @@ jobPostings: {
   lompat ke hari berikutnya. Dua-duanya diperbaiki di skrip tes,
   dikonfirmasi ulang kode game-nya sendiri sudah benar dari awal.
 
+**Bug ditemukan & diperbaiki (setelah user lapor pakai screenshot):**
+`screens/homeScreen.js` — clock besar & tanggal di layar utama
+(`h-clock`/`h-date`) masih pakai `new Date()` (jam/tanggal **device
+asli**), bukan jam in-game. Ini gak ketauan pas Langkah 2 (waktu
+ambient) karena dianggap kosmetik, tapi ternyata jadi sumber
+kebingungan nyata: user coba di HP-nya pas hari **Kamis** (tanggal
+asli), tapi kotak pekerjaan "Barista (shift tetap)" — yang jadwalnya
+Senin/Jumat/Minggu — tetap kelihatan "Aktif sekarang" dan bisa
+dikerjain. Awalnya kelihatan kayak bug di logic jadwal, tapi setelah
+dicek, itu logic jadwalnya udah benar (ngikutin `meta.day` in-game,
+yang saat itu emang lagi jatuh di hari Senin/Jumat/Minggu versi
+game) — cuma layar utama nunjukkin hari **device asli** ("Kamis")
+yang gak ada hubungannya sama sistem hari in-game sama sekali,
+sehingga terlihat seperti kontradiksi padahal bukan.
+
+**Perbaikan:** `h-clock`/`h-date` sekarang pakai `phone.time` +
+`dayOfWeek(meta.day)` (format "Hari ke-N"), sama kayak yang udah
+dipakai `statusBar.js`/`dashchat.js`/`timeSkip.js` sejak Langkah 2 —
+jadi apa pun yang ditampilkan ke pemain soal hari/jam sekarang
+konsisten satu sumber kebenaran (`meta.day`/`phone.time`), gak ada
+lagi campuran device-clock vs in-game-clock di layar mana pun.
+Konstanta `DAY_NAMES`/`MONTH_NAMES` lama (device-date formatting)
+dihapus karena udah gak kepake.
+
+Divalidasi: `node --check` + simulasi DOM — render awal cocok
+(`meta.day=1` → "Senin, Hari ke-1"), lalu di-fast-forward 10 hari
+(`AppState.tick(1440*10)`) → `meta.day=11` → "Kamis, Hari ke-11", dan
+dikonfirmasi job yang dijadwalkan buat hari itu juga beneran aktif
+di app Pekerjaan — home screen dan jadwal kerjaan sekarang selalu
+ngomongin hari yang sama.
+
 ---
 
 ## 9. Log progres implementasi
