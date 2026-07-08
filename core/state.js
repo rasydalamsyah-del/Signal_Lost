@@ -43,6 +43,22 @@ function dayOfWeek(day) {
   return DAY_NAMES[idx];
 }
 
+// ---- month/date mapping (RANCANGAN_MULTI_KARAKTER.md §11.3) ----
+// Same idea as dayOfWeek() above, just a coarser unit: 1 "bulan" = a
+// flat 30 days (deliberately NOT real-calendar month lengths — this
+// is a fictional world with no real year, so a real Jan-31/Feb-28
+// calendar would just be needless complexity for no benefit). Day 1
+// = tanggal 1, bulan 1. Used by the Kalender grid (apps/calendar.js)
+// and character birthdays (core/characters.js's `birthDate`).
+const DAYS_PER_MONTH = 30;
+function monthOfDay(day) {
+  return Math.floor((day - 1) / DAYS_PER_MONTH) + 1;
+}
+function dateInMonth(day) {
+  const idx = ((day - 1) % DAYS_PER_MONTH + DAYS_PER_MONTH) % DAYS_PER_MONTH;
+  return idx + 1;
+}
+
 const AppState = (function () {
 
   // ---- build the runtime slice for all 10 baked-in characters from

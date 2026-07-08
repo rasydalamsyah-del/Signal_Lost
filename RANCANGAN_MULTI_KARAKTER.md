@@ -581,6 +581,19 @@ loop harian yang jelas.
 
 2. **Sistem tanggal/bulan** (§11.3) — fondasi kedua, `monthOfDay()`/
    `dateInMonth()`, dibutuhkan langkah 3 & 5
+
+**✅ SELESAI (implementasi):**
+- `core/state.js`: tambah `DAYS_PER_MONTH = 30` + `monthOfDay(day)` /
+  `dateInMonth(day)` — global functions, pola sama kayak `dayOfWeek()`
+  (Langkah 10.3), turunan murni dari `meta.day`, bukan field state
+  terpisah yang bisa desync. Day 1 = bulan 1 tanggal 1.
+- Sudah divalidasi: `node --check` + simulasi headless lengkap —
+  dicek manual di titik-titik penting (hari 30→31 pindah bulan, hari
+  60→61, dst), **loop otomatis 300 hari** mastiin `dateInMonth` selalu
+  1-30 dan tiap awal bulan (`(d-1)%30===0`) selalu `dateInMonth===1`,
+  plus dicoba lewat `AppState.tick()` beneran (fast-forward 45 hari →
+  bulan 2 tanggal 16, Kamis) — bukan cuma hitung manual di luar sistem.
+
 3. **Tidur/bangun** (§11.5) — mekanisme baru, pakai stat `energi`
 4. **Rutinitas harian** (§11.6) — konten baru, pakai SEMUA stat
    §11.2, nyambung ke tidur/bangun dari langkah 3
