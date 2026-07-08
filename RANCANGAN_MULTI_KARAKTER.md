@@ -379,5 +379,35 @@ jadi tidak ada kerjaan tambahan — lanjut ke Langkah 5.
   kejadian & keliatan di teks layar → app Kontak ikut nunjukkin 10
   kontak yang sama. jsdom di-install sementara, dihapus lagi setelahnya.
 
-### ⏭️ Langkah 7 — Job system (belum dikerjakan)
+### ✅ Langkah 7 — Job system (selesai)
+- **`core/story.js`**: effect baru **`completeMiniJob`** — reward
+  selalu masuk ke `selfStats.money`; kalau `fx.jobTitle` diisi DAN
+  `selfIdentity.pekerjaan` masih kosong, pekerjaan "menetap" jadi itu.
+  Sengaja **cuma menetap sekali** — mini-job berikutnya tetap bayar,
+  tapi gak diam-diam ganti profesi yang udah dipilih pemain.
+- Fungsi baru **`Story.hasJobOverlap(charId)`** — true kalau
+  `selfIdentity.pekerjaan` pemain sama persis dengan `job.title` bawaan
+  karakter itu di `core/characters.js`.
+- **`apps/dashchat.js`**: `evalCondition` nambah tipe kondisi
+  `{ when:'jobOverlap', charId, next }` (dipakai bareng `skipTo`, sama
+  pola kayak `allFilled`/`flag`/`neglect` yang udah ada).
+- **Demo konkret** (bukan cuma simulasi headless) — `char_nadia` dan
+  `char_dimas` sengaja sama-sama Barista dari Langkah 1, dipakai buat
+  bukti nyata: naskah stub Nadia ditambah cabang tawaran mini-job
+  (`char_nadia_minijob_offer` → terima → `completeMiniJob`); naskah
+  stub Dimas ditambah gerbang `char_dimas_job_gate` yang manggil
+  `skipTo: { when:'jobOverlap', ... }` — kalau pemain udah kerja jadi
+  Barista (dari nge-*minijob* di Nadia), pas buka chat Dimas langsung
+  dapet sapaan spesial ("eh tunggu, kamu barista juga?") sebelum lanjut
+  ke obrolan normal.
+- Sudah divalidasi: `node --check` + simulasi headless (reward selalu
+  jalan, job cuma menetap sekali, `hasJobOverlap` bener/salah sesuai
+  kondisi, aman buat id gak dikenal) + **integrasi DOM penuh pakai
+  jsdom**: selesein mini-job Nadia beneran lewat klik tombol di
+  DOM (`money` & `pekerjaan` berubah sesuai, teks reward tampil), lalu
+  buka chat Dimas dan sapaan overlap-nya beneran muncul di layar,
+  tetap lanjut normal ke `intro_choice` setelahnya. Sempat ketemu
+  bug di skrip tes sendiri (salah cari frasa), sudah dikoreksi dan
+  diverifikasi ulang — bukan bug di kode game.
+
 ### ⏭️ Langkah 8 — Konten penuh per karakter (belum dikerjakan)

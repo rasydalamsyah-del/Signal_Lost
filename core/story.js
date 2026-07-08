@@ -419,6 +419,46 @@ const Story = (function () {
     };
   });
 
+  // ---- job system demo (RANCANGAN_MULTI_KARAKTER.md §4) ----
+  // char_nadia and char_dimas are BOTH baristas on purpose (see the
+  // comment in core/characters.js) specifically so there's a real
+  // pair to demonstrate mini-jobs + profession overlap on right now,
+  // instead of only proving it in a headless simulation. Real content
+  // for both (Langkah 8) will very likely replace these nodes outright
+  // — kept deliberately small.
+  STORY.char_nadia.char_nadia_stub_end.next = 'char_nadia_minijob_offer';
+  STORY.char_nadia.char_nadia_minijob_offer = {
+    lines: ['eh btw, kedai kopi tempat aku kerja lagi butuh orang buat bantuin shift sore. mau coba?'],
+    choices: [
+      {
+        label: 'Boleh, coba deh.',
+        next: 'char_nadia_minijob_done',
+        effects: [{ type: 'completeMiniJob', reward: 75000, jobTitle: 'Barista' }]
+      },
+      { label: 'Kayaknya nggak dulu deh.', next: 'char_nadia_minijob_decline' }
+    ]
+  };
+  STORY.char_nadia.char_nadia_minijob_done = {
+    lines: ['asik, makasih banyak ya! ini buat kamu.', 'lumayan buat nambah-nambah kan hehe.']
+  };
+  STORY.char_nadia.char_nadia_minijob_decline = {
+    lines: ['oke deh, nggak apa-apa. kapan-kapan aja kalo gitu.']
+  };
+
+  STORY.char_dimas.char_dimas_start.next = 'char_dimas_job_gate';
+  STORY.char_dimas.char_dimas_job_gate = {
+    lines: [],
+    skipTo: { when: 'jobOverlap', charId: 'char_dimas', next: 'char_dimas_overlap_greet' },
+    next: 'char_dimas_intro_choice'
+  };
+  STORY.char_dimas.char_dimas_overlap_greet = {
+    lines: [
+      'eh tunggu — kamu kerja jadi barista juga ya sekarang?',
+      'anjir kita satu profesi dong, lucu banget wkwk.'
+    ],
+    next: 'char_dimas_intro_choice'
+  };
+
   // ================= ENGINE =================
 
   function resolveText(str) { return AppState.resolveText(str); }
@@ -616,6 +656,21 @@ const Story = (function () {
           break;
         }
 
+        // ---- job system (RANCANGAN_MULTI_KARAKTER.md §4) ----
+        // a character offers work through dialogue, player accepts →
+        // reward always lands in selfStats.money; if `fx.jobTitle` is
+        // given AND the player doesn't have a job yet, it "settles"
+        // as their profession (selfIdentity.pekerjaan) — but only the
+        // FIRST time. Doing more mini-jobs afterwards still pays out,
+        // it just doesn't silently change what job you already have.
+        case 'completeMiniJob': {
+          s.selfStats.money += (fx.reward || 0);
+          if (fx.jobTitle && !s.selfIdentity.pekerjaan) {
+            s.selfIdentity.pekerjaan = resolveText(fx.jobTitle);
+          }
+          break;
+        }
+
         // reveal one biographical field — either the player's own
         // (fx.target = 'self', writes to selfIdentity) or a character's
         // (fx.target = a characters.js id, writes to
@@ -644,6 +699,17 @@ const Story = (function () {
   }
 
   function clamp01to100(n) { return Math.max(0, Math.min(100, n)); }
+
+  // ---- job overlap check (RANCANGAN_MULTI_KARAKTER.md §4) ----
+  // True once the player's own settled profession (selfIdentity.pekerjaan,
+  // set via the completeMiniJob effect above) matches this character's
+  // baked-in job title. Dialogue can branch on this via evalCondition's
+  // { when:'jobOverlap', charId, next } in apps/dashchat.js.
+  function hasJobOverlap(charId) {
+    const s = AppState.get();
+    const def = CHARACTERS[charId];
+    return !!(def && s.selfIdentity.pekerjaan && s.selfIdentity.pekerjaan === def.job.title);
+  }
 
   // ---- interaction tracking + neglect score (RANCANGAN_MULTI_KARAKTER.md §5) ----
   // Call whenever a message is sent to one of the 10 characters (see
@@ -701,6 +767,7 @@ const Story = (function () {
     runEffects,
     runEffectsOnce,
     recordInteraction,
-    computeNeglect
+    computeNeglect,
+    hasJobOverlap
   };
 })();

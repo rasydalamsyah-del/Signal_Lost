@@ -16,6 +16,8 @@
   //   { when:'neglect', charId:'char_x', gte:50, next } — that character's
   //     neglect score (Story.computeNeglect) is at/above threshold —
   //     see RANCANGAN_MULTI_KARAKTER.md §5
+  //   { when:'jobOverlap', charId:'char_x', next } — player's settled
+  //     job matches that character's profession — see §4
   function evalCondition(cond) {
     if (!cond) return false;
     if (cond.when === 'allFilled') {
@@ -27,6 +29,9 @@
     }
     if (cond.when === 'neglect') {
       return Story.computeNeglect(cond.charId) >= (cond.gte || 0);
+    }
+    if (cond.when === 'jobOverlap') {
+      return Story.hasJobOverlap(cond.charId);
     }
     return false;
   }
