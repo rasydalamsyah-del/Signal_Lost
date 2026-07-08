@@ -104,7 +104,19 @@ const AppState = (function () {
         happiness: 60, // kesenangan
         sadness: 20,   // kesedihan
         jealousy: 10,  // cemburu (milik user sendiri, beda dari jealousy per-karakter)
-        money: 150000  // keuangan, dari mini-job & efek cerita
+        money: 150000, // keuangan, dari mini-job & efek cerita
+
+        // ---- kebutuhan (RANCANGAN_MULTI_KARAKTER.md §11.2) — menurun
+        // seiring waktu/aktivitas, dijaga lewat tidur/rutinitas/MyShop
+        // (integrasi MyShop belum dikerjakan, lihat §11.8 langkah 7) ----
+        energi: 100,     // pulih penuh dari tidur (screens/sleepScreen.js, §11.5)
+        lapar: 80,       // turun seiring waktu, naik kalau makan
+        kesehatan: 90,   // turun kalau energi/lapar dibiarin rendah kelamaan
+        kebersihan: 90,  // turun tiap hari, pulih dari rutinitas pagi (mandi)
+
+        // ---- pengembangan diri — naik dari rutinitas harian (§11.6) ----
+        kepintaran: 20,  // naik dari rutinitas kuliah/perpus
+        kekuatan: 20     // naik dari rutinitas olahraga
       },
       selfIdentity: {
         pekerjaan: null,

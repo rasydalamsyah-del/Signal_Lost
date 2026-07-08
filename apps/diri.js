@@ -22,6 +22,17 @@
     { key: 'sadness',   label: 'Kesedihan' },
     { key: 'jealousy',  label: 'Cemburu' }
   ];
+  // ---- kebutuhan & pengembangan diri (RANCANGAN_MULTI_KARAKTER.md §11.2) ----
+  const NEEDS_STAT_ROWS = [
+    { key: 'energi',     label: 'Energi' },
+    { key: 'lapar',      label: 'Lapar' },
+    { key: 'kesehatan',  label: 'Kesehatan' },
+    { key: 'kebersihan', label: 'Kebersihan' }
+  ];
+  const GROWTH_STAT_ROWS = [
+    { key: 'kepintaran', label: 'Kepintaran' },
+    { key: 'kekuatan',   label: 'Kekuatan' }
+  ];
   const IDENTITY_FIELDS = [
     { key: 'pekerjaan', label: 'Pekerjaan' },
     { key: 'hobi',      label: 'Hobi' },
@@ -49,6 +60,28 @@
       <div class="diri-stat-row">
         <span class="diri-stat-label">${r.label}</span>
         ${bar(self[r.key], r.key === 'jealousy' ? 'diri-bar-warn' : '')}
+        <span class="diri-stat-num">${clamp(self[r.key])}</span>
+      </div>
+    `).join('');
+
+    // needs stats turn warning-red when running low (< 30) — a quiet
+    // visual nudge that something needs attention (sleep/eat/etc),
+    // without any pop-up/interruption.
+    const needsRows = NEEDS_STAT_ROWS.map(r => {
+      const v = clamp(self[r.key]);
+      return `
+        <div class="diri-stat-row">
+          <span class="diri-stat-label">${r.label}</span>
+          ${bar(v, v < 30 ? 'diri-bar-warn' : '')}
+          <span class="diri-stat-num">${v}</span>
+        </div>
+      `;
+    }).join('');
+
+    const growthRows = GROWTH_STAT_ROWS.map(r => `
+      <div class="diri-stat-row">
+        <span class="diri-stat-label">${r.label}</span>
+        ${bar(self[r.key])}
         <span class="diri-stat-num">${clamp(self[r.key])}</span>
       </div>
     `).join('');
@@ -84,6 +117,12 @@
         <span class="diri-stat-label">Keuangan</span>
         <span class="diri-money">${formatMoney(self.money)}</span>
       </div>
+
+      <div class="diri-section-title">Kebutuhan</div>
+      ${needsRows}
+
+      <div class="diri-section-title">Pengembangan Diri</div>
+      ${growthRows}
 
       <div class="diri-section-title">Hubungan</div>
       <p class="diri-hint">Nama & angka baru kelihatan jelas setelah kamu mulai kenal orangnya.</p>

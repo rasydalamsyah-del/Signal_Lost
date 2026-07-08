@@ -563,6 +563,22 @@ loop harian yang jelas.
 ### 11.8 Urutan pengerjaan (disepakati — Claude yang susun)
 1. **Stat baru** (§11.2) — fondasi, ditambah ke `selfStats` +
    ditampilkan di app Diri
+
+**✅ SELESAI (implementasi):**
+- `core/state.js`: 6 stat baru di `selfStats` — `energi:100`,
+  `lapar:80`, `kesehatan:90`, `kebersihan:90` (kebutuhan), plus
+  `kepintaran:20`, `kekuatan:20` (pengembangan diri). Semua 0-100,
+  otomatis ke-clamp oleh `adjustStat` effect yang udah ada (gak perlu
+  ubah engine).
+- `apps/diri.js`: tab Status sekarang punya 2 section baru —
+  "Kebutuhan" (4 stat, bar jadi merah/warning kalau di bawah 30 —
+  nudge visual halus tanpa notifikasi/pop-up) dan "Pengembangan Diri"
+  (2 stat).
+- Sudah divalidasi: `node --check` + simulasi headless (nilai default
+  benar semua, `adjustStat` clamp jalan buat tiap stat baru) +
+  integrasi DOM (app Diri render 30 baris stat total, semua label
+  kebutuhan/pengembangan muncul benar).
+
 2. **Sistem tanggal/bulan** (§11.3) — fondasi kedua, `monthOfDay()`/
    `dateInMonth()`, dibutuhkan langkah 3 & 5
 3. **Tidur/bangun** (§11.5) — mekanisme baru, pakai stat `energi`
