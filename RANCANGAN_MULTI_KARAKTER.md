@@ -410,4 +410,39 @@ jadi tidak ada kerjaan tambahan — lanjut ke Langkah 5.
   bug di skrip tes sendiri (salah cari frasa), sudah dikoreksi dan
   diverifikasi ulang — bukan bug di kode game.
 
-### ⏭️ Langkah 8 — Konten penuh per karakter (belum dikerjakan)
+### 🔶 Langkah 8 — Konten penuh per karakter (2/10 selesai: Nadia, Kirana)
+Sesuai kesepakatan build-order ("kerangka teknis 10 penuh dari awal,
+konten bertahap"), 2 karakter pertama sudah ditulis dalam & lengkap
+menggantikan stub generik-nya; 8 sisanya masih pakai stub generik
+dari Langkah 6 sampai gilirannya masing-masing.
+
+- **Nadia** (barista, ceria/banyak becanda) — `core/story.js`
+  `STORY.char_nadia` ditulis ulang total (11 node): pilihan gaya
+  ngobrol (basa-basi/to-the-point) → reveal pekerjaan → pilihan hobi
+  (opsi flirty naikin `love` + memicu `rivalRipple` ke rival
+  sesama-gender) → reveal hobi (Fotografi Analog) → tawaran mini-job
+  (barista) → penutup hangat. Mini-job dia yang jadi trigger nyata buat
+  demo overlap-profesi Dimas (Langkah 7).
+- **Kirana** (desainer grafis, tertutup/dry, perfeksionis) — vibe
+  sengaja beda total dari Nadia sesuai arahan "campuran, tiap karakter
+  beda vibe". `STORY.char_kirana` (13 node): dia gak langsung cair —
+  pilihan yang ngasih ruang ("chat nanti aja") naikin trust, yang
+  maksa malah nurunin trust & mood. Vent soal kerjaan → pilihan
+  dukungan emosional vs saran teknis (dua jalur trust beda) → reveal
+  hobi (Menggambar Digital) → tawaran mini-job (desainer) → penutup,
+  dengan `globalRipple` di milestone-nya (gerbang `trust>=15`).
+- Sudah divalidasi: `node --check` + **audit graf node** (BFS dari
+  node awal tiap thread, pastiin semua `next`/`choices[].next`/
+  `skipTo.next` nyambung ke node yang beneran ada — 0 referensi rusak
+  buat Nadia/Kirana/Dimas/stub generik) + **integrasi DOM penuh pakai
+  jsdom**: jalanin dua jalur lengkap Nadia & Kirana lewat klik tombol
+  sungguhan, verifikasi tiap angka stat/identity/uang sesuai
+  perhitungan manual, DAN buktikan **aturan "job cuma menetap sekali"
+  dari Langkah 7 beneran kepake lintas-karakter** — pemain yang udah
+  jadi Barista dari mini-job Nadia, coba terima mini-job Kirana
+  (Desainer Grafis) juga, `selfIdentity.pekerjaan` tetap "Barista",
+  gak ketiban ganti. Juga cek regresi: 8 karakter stub lain masih
+  jalan normal, gak kena dampak.
+- Sisa 8 karakter (Salsa, Bella, Intan, Bagas, Raka, Fahri, Aldo — plus
+  Dimas yang masih perlu naskah utuh di luar gerbang overlap-nya)
+  masih pakai stub generik, nunggu giliran ditulis di sesi berikutnya.

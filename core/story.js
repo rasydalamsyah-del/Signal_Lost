@@ -421,29 +421,10 @@ const Story = (function () {
 
   // ---- job system demo (RANCANGAN_MULTI_KARAKTER.md §4) ----
   // char_nadia and char_dimas are BOTH baristas on purpose (see the
-  // comment in core/characters.js) specifically so there's a real
-  // pair to demonstrate mini-jobs + profession overlap on right now,
-  // instead of only proving it in a headless simulation. Real content
-  // for both (Langkah 8) will very likely replace these nodes outright
-  // — kept deliberately small.
-  STORY.char_nadia.char_nadia_stub_end.next = 'char_nadia_minijob_offer';
-  STORY.char_nadia.char_nadia_minijob_offer = {
-    lines: ['eh btw, kedai kopi tempat aku kerja lagi butuh orang buat bantuin shift sore. mau coba?'],
-    choices: [
-      {
-        label: 'Boleh, coba deh.',
-        next: 'char_nadia_minijob_done',
-        effects: [{ type: 'completeMiniJob', reward: 75000, jobTitle: 'Barista' }]
-      },
-      { label: 'Kayaknya nggak dulu deh.', next: 'char_nadia_minijob_decline' }
-    ]
-  };
-  STORY.char_nadia.char_nadia_minijob_done = {
-    lines: ['asik, makasih banyak ya! ini buat kamu.', 'lumayan buat nambah-nambah kan hehe.']
-  };
-  STORY.char_nadia.char_nadia_minijob_decline = {
-    lines: ['oke deh, nggak apa-apa. kapan-kapan aja kalo gitu.']
-  };
+  // comment in core/characters.js) so there's a real pair to
+  // demonstrate mini-jobs + profession overlap right now. Nadia's
+  // mini-job offer below is the real trigger for this; Dimas's gate
+  // (further down) checks for it.
 
   STORY.char_dimas.char_dimas_start.next = 'char_dimas_job_gate';
   STORY.char_dimas.char_dimas_job_gate = {
@@ -457,6 +438,208 @@ const Story = (function () {
       'anjir kita satu profesi dong, lucu banget wkwk.'
     ],
     next: 'char_dimas_intro_choice'
+  };
+
+  // ===========================================================
+  // REAL CONTENT (Langkah 8) — replaces the generic stub for the
+  // characters written so far. The other 8 still use the generic
+  // stub from the forEach loop above until their turn. See
+  // RANCANGAN_MULTI_KARAKTER.md §1 (build order) / §9 (progress log).
+  // ===========================================================
+
+  // ---------------------------------------------------------
+  // NADIA — barista, ceria, banyak becanda, upfront/expressive.
+  // Warms up fast; the "cost" of that ease is she's an open book,
+  // so leaning into it (flirty choice below) visibly nudges rivals.
+  // ---------------------------------------------------------
+  STORY.char_nadia = {
+    char_nadia_start: {
+      lines: [
+        'woy halo! kontak baru ya kayaknya wkwk',
+        'gapapa kan aku sok akrab? aku emang gini orangnya'
+      ],
+      next: 'char_nadia_vibe_choice'
+    },
+    char_nadia_vibe_choice: {
+      lines: ['btw kamu tipe yang suka basa-basi dulu, apa langsung to the point aja?'],
+      choices: [
+        {
+          label: 'Basa-basi dulu, biar akrab.',
+          next: 'char_nadia_after_basabasi',
+          effects: [{ type: 'adjustStat', target: 'char_nadia', stat: 'trust', delta: 3 }]
+        },
+        {
+          label: 'To the point aja.',
+          next: 'char_nadia_after_direct',
+          effects: [{ type: 'adjustStat', target: 'char_nadia', stat: 'trust', delta: 3 }]
+        }
+      ]
+    },
+    char_nadia_after_basabasi: {
+      lines: ['nah gitu dong, aku demen banget basa-basi wkwk', 'eh tapi tetep, aku gak akan tanya yang aneh-aneh kok santai aja'],
+      next: 'char_nadia_reveal_job'
+    },
+    char_nadia_after_direct: {
+      lines: ['oke sip, aku juga males muter-muter sih sebenernya', 'to the point emang paling enak, gak buang waktu'],
+      next: 'char_nadia_reveal_job'
+    },
+    char_nadia_reveal_job: {
+      lines: ['btw kerjaanku barista, di kedai kopi deket sini.', 'kalo kamu lewat mampir aja, aku kasih diskon temen wkwk'],
+      effects: [{ type: 'revealIdentity', target: 'char_nadia', field: 'pekerjaan', value: 'Barista' }],
+      next: 'char_nadia_ask_hobby'
+    },
+    char_nadia_ask_hobby: {
+      lines: ['kalo kamu, hobinya apa sih?'],
+      choices: [
+        {
+          label: 'Aku lebih suka denger cerita kamu dulu deh.',
+          next: 'char_nadia_hobby_reveal',
+          effects: [
+            { type: 'adjustStat', target: 'char_nadia', stat: 'love', delta: 4 },
+            { type: 'rivalRipple', source: 'char_nadia', targetStat: 'jealousy', delta: 3 }
+          ]
+        },
+        { label: '(masih agak males cerita soal diri sendiri)', next: 'char_nadia_hobby_reveal' }
+      ]
+    },
+    char_nadia_hobby_reveal: {
+      lines: ['ya udah aku duluan deh cerita.', 'hobiku foto-foto pake kamera film, analog gitu. rada mahal tapi hasilnya seru banget'],
+      effects: [{ type: 'revealIdentity', target: 'char_nadia', field: 'hobi', value: 'Fotografi Analog' }],
+      next: 'char_nadia_minijob_offer'
+    },
+    char_nadia_minijob_offer: {
+      lines: ['eh btw, kedai kopi tempatku kerja lagi butuh orang bantuin shift sore, kebetulan!', 'mau coba gak? lumayan buat uang jajan'],
+      choices: [
+        {
+          label: 'Boleh, coba deh.',
+          next: 'char_nadia_minijob_done',
+          effects: [{ type: 'completeMiniJob', reward: 75000, jobTitle: 'Barista' }]
+        },
+        { label: 'Kayaknya nggak dulu deh.', next: 'char_nadia_minijob_decline' }
+      ]
+    },
+    char_nadia_minijob_done: {
+      lines: ['asik, makasih banyak ya! ini buat kamu.', 'kerja bareng ternyata seru juga, kamu emang asik diajak kerja sama'],
+      effects: [
+        { type: 'adjustStat', target: 'char_nadia', stat: 'love', delta: 5 },
+        { type: 'globalRipple', source: 'char_nadia', condition: { stat: 'love', gte: 10 }, targetStat: 'jealousy', delta: 2 }
+      ],
+      next: 'char_nadia_milestone'
+    },
+    char_nadia_minijob_decline: {
+      lines: ['oke deh, nggak apa-apa kok. kapan-kapan aja kalo mood.'],
+      next: 'char_nadia_milestone'
+    },
+    char_nadia_milestone: {
+      // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
+      lines: ['btw seneng deh akhirnya ada temen ngobrol baru wkwk', 'chat-chat lagi ya, aku available kok kalo kamu butuh temen cerita']
+    }
+  };
+
+  // ---------------------------------------------------------
+  // KIRANA — desainer grafis freelance, tertutup/dry humor,
+  // perfeksionis. Beda total sama Nadia: gak langsung cair, harus
+  // sabar dulu. Pilihan yang mendesak dia malah bikin trust turun;
+  // pilihan yang ngasih ruang justru bikin dia lebih kebuka.
+  // ---------------------------------------------------------
+  STORY.char_kirana = {
+    char_kirana_start: {
+      lines: ['...siapa ya? oh, kontak baru.', 'lagi rada sibuk sih, tapi ya udah, hai.'],
+      next: 'char_kirana_busy_choice'
+    },
+    char_kirana_busy_choice: {
+      lines: ['kamu nyariin siapa emangnya, atau emang random doang nih.'],
+      choices: [
+        {
+          label: 'Random doang. Kalo lagi sibuk, aku chat nanti aja.',
+          next: 'char_kirana_after_patient',
+          effects: [{ type: 'adjustStat', target: 'char_kirana', stat: 'trust', delta: 5 }]
+        },
+        {
+          label: 'Gapapa kok, cerita aja santai, aku dengerin.',
+          next: 'char_kirana_after_pushy',
+          effects: [
+            { type: 'adjustStat', target: 'char_kirana', stat: 'trust', delta: -2 },
+            { type: 'adjustStat', target: 'char_kirana', stat: 'mood', delta: -2 }
+          ]
+        }
+      ]
+    },
+    char_kirana_after_patient: {
+      lines: ['oh... oke, makasih ya udah ngerti.', 'jarang-jarang ada yang gak maksa ngobrol pas aku bilang sibuk.'],
+      next: 'char_kirana_reveal_job'
+    },
+    char_kirana_after_pushy: {
+      lines: ['...oke deh.', '(dia keliatan agak males, tapi tetep bales)'],
+      next: 'char_kirana_reveal_job'
+    },
+    char_kirana_reveal_job: {
+      lines: ['kerjaanku desainer grafis, freelance.', 'lagi ngerjain revisi klien yang... yah, gitu deh.'],
+      effects: [{ type: 'revealIdentity', target: 'char_kirana', field: 'pekerjaan', value: 'Desainer Grafis' }],
+      next: 'char_kirana_deadline_vent'
+    },
+    char_kirana_deadline_vent: {
+      lines: ['kliennya minta revisi ke-7 hari ini. tujuh.', 'kadang capek juga ngerjain sesuatu yang gak pernah dirasa cukup bagus.'],
+      choices: [
+        {
+          label: 'Wajar kok kesel. Istirahat dulu gih.',
+          next: 'char_kirana_after_support',
+          effects: [
+            { type: 'adjustStat', target: 'char_kirana', stat: 'trust', delta: 4 },
+            { type: 'adjustStat', target: 'char_kirana', stat: 'love', delta: 2 }
+          ]
+        },
+        {
+          label: 'Coba dibikin moodboard, biar klien jelas maunya apa.',
+          next: 'char_kirana_after_advice',
+          effects: [{ type: 'adjustStat', target: 'char_kirana', stat: 'trust', delta: 6 }]
+        }
+      ]
+    },
+    char_kirana_after_support: {
+      lines: ['...makasih.', 'kadang emang cuma butuh didenger doang sih, bukan disolusiin mulu.'],
+      next: 'char_kirana_reveal_hobby'
+    },
+    char_kirana_after_advice: {
+      lines: ['...itu ide bagus sih, jujur.', 'kamu ngerti kerjaan gini juga ya?'],
+      next: 'char_kirana_reveal_hobby'
+    },
+    char_kirana_reveal_hobby: {
+      lines: ['di luar kerjaan, aku suka gambar digital buat diri sendiri. gak buat klien, buat aku doang.', 'itu satu-satunya waktu gambar gak berasa kayak kerjaan.'],
+      effects: [{ type: 'revealIdentity', target: 'char_kirana', field: 'hobi', value: 'Menggambar Digital' }],
+      next: 'char_kirana_minijob_offer'
+    },
+    char_kirana_minijob_offer: {
+      lines: ['eh, kamu mau bantuin riset referensi visual gak buat project aku?', 'gampang kok, tinggal kumpulin gambar-gambar yang vibenya cocok.'],
+      choices: [
+        {
+          label: 'Boleh, aku bantuin.',
+          next: 'char_kirana_minijob_done',
+          effects: [
+            { type: 'completeMiniJob', reward: 60000, jobTitle: 'Desainer Grafis' },
+            { type: 'adjustStat', target: 'char_kirana', stat: 'trust', delta: 5 }
+          ]
+        },
+        { label: 'Kayaknya lagi nggak sempet deh.', next: 'char_kirana_minijob_decline' }
+      ]
+    },
+    char_kirana_minijob_done: {
+      lines: ['lumayan banget bantuannya, makasih ya.', 'ini buat kamu, walau gak seberapa.'],
+      effects: [
+        { type: 'adjustStat', target: 'char_kirana', stat: 'love', delta: 4 },
+        { type: 'rivalRipple', source: 'char_kirana', targetStat: 'jealousy', delta: 3 }
+      ],
+      next: 'char_kirana_milestone'
+    },
+    char_kirana_minijob_decline: {
+      lines: ['oke, gapapa kok. lain kali aja kalo sempet.'],
+      next: 'char_kirana_milestone'
+    },
+    char_kirana_milestone: {
+      // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
+      lines: ['...kamu lumayan enak diajak ngobrol, ternyata.', 'jarang aku bilang gini ke orang baru sih. chat-chat lagi ya kalo sempet.'],
+      effects: [{ type: 'globalRipple', source: 'char_kirana', condition: { stat: 'trust', gte: 15 }, targetStat: 'jealousy', delta: 2 }]
+    }
   };
 
   // ================= ENGINE =================
