@@ -840,6 +840,192 @@ const Story = (function () {
     }
   };
 
+  // ---------------------------------------------------------
+  // RAKA — fotografer, reflektif/pengamat, perayu halus lewat
+  // detail kecil (bukan gombalan langsung). Beda dari yang lain:
+  // dia notice hal-hal kecil tentang lawan bicara dan bikin itu
+  // terasa dilihat, bukan diburu-buru.
+  // ---------------------------------------------------------
+  STORY.char_raka = {
+    char_raka_start: {
+      lines: ['halo.', 'kontak baru... unik. kayak buka amplop yang belum tau isinya apa.'],
+      next: 'char_raka_smalltalk_choice'
+    },
+    char_raka_smalltalk_choice: {
+      lines: ['kamu tipe yang suka diperhatiin detail-detail kecil, atau lebih suka to the point aja?'],
+      choices: [
+        {
+          label: 'Suka diperhatiin, jujur agak seneng juga.',
+          next: 'char_raka_after_open',
+          effects: [
+            { type: 'adjustStat', target: 'char_raka', stat: 'trust', delta: 3 },
+            { type: 'adjustStat', target: 'char_raka', stat: 'love', delta: 3 }
+          ]
+        },
+        {
+          label: 'To the point aja, gak usah muter-muter.',
+          next: 'char_raka_after_direct',
+          effects: [{ type: 'adjustStat', target: 'char_raka', stat: 'trust', delta: 4 }]
+        }
+      ]
+    },
+    char_raka_after_open: {
+      lines: ['nah, aku emang suka merhatiin hal-hal kecil sih.', 'kayak cara orang ngetik, buru-buru apa santai — kelihatan banyak dari situ'],
+      next: 'char_raka_reveal_job'
+    },
+    char_raka_after_direct: {
+      lines: ['oke, dicatat.', 'aku emang kadang kelamaan muter sih, maklum kebiasaan lama motret'],
+      next: 'char_raka_reveal_job'
+    },
+    char_raka_reveal_job: {
+      lines: ['kerjaanku fotografer, kadang event kadang project pribadi.', 'paling suka motret momen yang orangnya gak sadar lagi difoto, natural gitu'],
+      effects: [{ type: 'revealIdentity', target: 'char_raka', field: 'pekerjaan', value: 'Fotografer' }],
+      next: 'char_raka_ask_hobby'
+    },
+    char_raka_ask_hobby: {
+      lines: ['kalo kamu, ada hal yang bikin kamu ngerasa "ini gue banget", gak?'],
+      choices: [
+        {
+          label: 'Ada, tapi agak susah dijelasin.',
+          next: 'char_raka_hobby_reveal',
+          effects: [
+            { type: 'adjustStat', target: 'char_raka', stat: 'trust', delta: 5 },
+            { type: 'adjustStat', target: 'char_raka', stat: 'love', delta: 2 }
+          ]
+        },
+        { label: '(mikir dulu, belum jawab)', next: 'char_raka_hobby_reveal' }
+      ]
+    },
+    char_raka_hobby_reveal: {
+      lines: ['gapapa kok, gak semua hal harus langsung bisa dijelasin.', 'kalo aku, itu jalan-jalan sendirian bawa kamera film, gak ada tujuan pasti'],
+      effects: [{ type: 'revealIdentity', target: 'char_raka', field: 'hobi', value: 'Fotografi Jalanan' }],
+      next: 'char_raka_minijob_offer'
+    },
+    char_raka_minijob_offer: {
+      lines: ['eh, aku butuh asisten dadakan buat motret event kecil minggu ini.', 'gampang kok, cuma bantu pegang reflector doang. mau?'],
+      choices: [
+        {
+          label: 'Boleh, aku bantuin.',
+          next: 'char_raka_minijob_done',
+          effects: [{ type: 'completeMiniJob', reward: 65000, jobTitle: 'Asisten Fotografer' }]
+        },
+        { label: 'Kayaknya gak bisa, lagi ada acara lain.', next: 'char_raka_minijob_decline' }
+      ]
+    },
+    char_raka_minijob_done: {
+      lines: ['makasih banyak ya, beneran ngebantu.', 'nanti aku kirim beberapa hasil fotonya buat kamu, sebagai ucapan terima kasih'],
+      effects: [
+        { type: 'adjustStat', target: 'char_raka', stat: 'love', delta: 5 },
+        { type: 'rivalRipple', source: 'char_raka', targetStat: 'jealousy', delta: 3 }
+      ],
+      next: 'char_raka_milestone'
+    },
+    char_raka_minijob_decline: {
+      lines: ['oke gapapa, lain kali aja kalo sempet.'],
+      next: 'char_raka_milestone'
+    },
+    char_raka_milestone: {
+      // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
+      lines: ['ngobrol sama kamu kayak liat foto yang belum sempurna fokusnya, tapi menarik buat diliatin lama-lama.', 'chat-chat lagi ya kapan-kapan'],
+      effects: [{ type: 'globalRipple', source: 'char_raka', condition: { stat: 'love', gte: 10 }, targetStat: 'jealousy', delta: 2 }]
+    }
+  };
+
+  // ---------------------------------------------------------
+  // FAHRI — guru, hangat/mentor, suka kasih nasihat (kadang gak
+  // diminta), sedikit dad-joke energy. Beda dari yang lain: dia
+  // yang paling "ngayomin" — responsnya lebih ke gimana kamu
+  // menerima bimbingan, bukan seberapa vulnerable kamu duluan.
+  // ---------------------------------------------------------
+  STORY.char_fahri = {
+    char_fahri_start: {
+      lines: ['assalamualaikum eh, halo maksudnya. kebiasaan lama wkwk', 'kontak baru ya? selamat datang deh kalo gitu'],
+      next: 'char_fahri_smalltalk_choice'
+    },
+    char_fahri_smalltalk_choice: {
+      lines: ['kamu suka dikasih saran, atau lebih suka didengerin doang dulu?'],
+      choices: [
+        {
+          label: 'Didengerin dulu aja, saran belakangan.',
+          next: 'char_fahri_after_listen',
+          effects: [{ type: 'adjustStat', target: 'char_fahri', stat: 'trust', delta: 5 }]
+        },
+        {
+          label: 'Boleh langsung kasih saran, aku suka masukan.',
+          next: 'char_fahri_after_advice',
+          effects: [
+            { type: 'adjustStat', target: 'char_fahri', stat: 'trust', delta: 4 },
+            { type: 'adjustStat', target: 'char_fahri', stat: 'love', delta: 2 }
+          ]
+        }
+      ]
+    },
+    char_fahri_after_listen: {
+      lines: ['oke sip, dicatat.', 'kadang emang orang cuma butuh didengerin dulu ya, gapapa'],
+      next: 'char_fahri_reveal_job'
+    },
+    char_fahri_after_advice: {
+      lines: ['nah, kebetulan aku emang demen kasih masukan wkwk', 'kebiasaan kerjaan kali ya'],
+      next: 'char_fahri_reveal_job'
+    },
+    char_fahri_reveal_job: {
+      lines: ['aku guru btw, ngajar di sekolah deket sini.', 'capek sih kadang, tapi liat murid ngerti sesuatu tuh rasanya puas banget'],
+      effects: [{ type: 'revealIdentity', target: 'char_fahri', field: 'pekerjaan', value: 'Guru' }],
+      next: 'char_fahri_ask_hobby'
+    },
+    char_fahri_ask_hobby: {
+      lines: ['kalo kamu, ada yang lagi pengen dipelajarin gak akhir-akhir ini?'],
+      choices: [
+        {
+          label: 'Ada, tapi masih bingung mulai dari mana.',
+          next: 'char_fahri_after_guidance',
+          effects: [
+            { type: 'adjustStat', target: 'char_fahri', stat: 'trust', delta: 5 },
+            { type: 'adjustStat', target: 'char_fahri', stat: 'love', delta: 3 }
+          ]
+        },
+        { label: 'Belum kepikiran sih.', next: 'char_fahri_after_guidance' }
+      ]
+    },
+    char_fahri_after_guidance: {
+      lines: ['gapapa, gak harus buru-buru juga.', 'kalo aku boleh kasih saran dikit — mulai aja dari yang bikin penasaran duluan, bukan yang "harus"'],
+      next: 'char_fahri_reveal_hobby'
+    },
+    char_fahri_reveal_hobby: {
+      lines: ['di luar ngajar, aku suka baca buku filosofi, lumayan berat tapi seru.', 'kadang jadi bahan ngobrol pas ngajar juga sih, biar gak monoton'],
+      effects: [{ type: 'revealIdentity', target: 'char_fahri', field: 'hobi', value: 'Membaca Filosofi' }],
+      next: 'char_fahri_minijob_offer'
+    },
+    char_fahri_minijob_offer: {
+      lines: ['eh, sekolah lagi butuh orang bantuin jagain stand pas acara bazar minggu depan.', 'gampang kok, cuma jagain meja doang. mau bantuin?'],
+      choices: [
+        {
+          label: 'Boleh, aku bantuin.',
+          next: 'char_fahri_minijob_done',
+          effects: [{ type: 'completeMiniJob', reward: 45000, jobTitle: 'Asisten Pengajar' }]
+        },
+        { label: 'Kayaknya lagi sibuk deh.', next: 'char_fahri_minijob_decline' }
+      ]
+    },
+    char_fahri_minijob_done: {
+      lines: ['makasih banyak ya, ngebantu banget.', 'anak-anak juga seneng ada yang bantuin'],
+      effects: [
+        { type: 'adjustStat', target: 'char_fahri', stat: 'love', delta: 4 },
+        { type: 'rivalRipple', source: 'char_fahri', targetStat: 'jealousy', delta: 3 }
+      ],
+      next: 'char_fahri_milestone'
+    },
+    char_fahri_minijob_decline: {
+      lines: ['oke gapapa, makasih udah mau dengerin curhatan guru wkwk'],
+      next: 'char_fahri_milestone'
+    },
+    char_fahri_milestone: {
+      // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
+      lines: ['seneng deh ngobrol sama kamu.', 'kalo butuh temen diskusi soal apa aja, chat aja ya'],
+      effects: [{ type: 'globalRipple', source: 'char_fahri', condition: { stat: 'trust', gte: 15 }, targetStat: 'jealousy', delta: 2 }]
+    }
+  };
+
   // ================= ENGINE =================
 
   function resolveText(str) { return AppState.resolveText(str); }

@@ -410,10 +410,10 @@ jadi tidak ada kerjaan tambahan — lanjut ke Langkah 5.
   bug di skrip tes sendiri (salah cari frasa), sudah dikoreksi dan
   diverifikasi ulang — bukan bug di kode game.
 
-### 🔶 Langkah 8 — Konten penuh per karakter (4/10 selesai: Nadia, Kirana, Salsa, Bagas)
+### 🔶 Langkah 8 — Konten penuh per karakter (6/10 selesai: Nadia, Kirana, Salsa, Bagas, Raka, Fahri)
 Sesuai kesepakatan build-order ("kerangka teknis 10 penuh dari awal,
-konten bertahap"), 4 karakter pertama sudah ditulis dalam & lengkap
-menggantikan stub generik-nya; 6 sisanya masih pakai stub generik
+konten bertahap"), 6 karakter pertama sudah ditulis dalam & lengkap
+menggantikan stub generik-nya; 4 sisanya masih pakai stub generik
 dari Langkah 6 sampai gilirannya masing-masing.
 
 - **Nadia** (barista, ceria/banyak becanda) — `core/story.js`
@@ -441,6 +441,17 @@ dari Langkah 6 sampai gilirannya masing-masing.
   gak nervous, gak butuh divalidasi. `STORY.char_bagas` (11 node):
   pilihan chill vs curious → reveal pekerjaan → reveal hobi
   (Modifikasi Motor Klasik) → mini-job bengkel.
+- **Raka** (fotografer, reflektif/pengamat, perayu halus) —
+  `STORY.char_raka` (11 node): notice hal-hal kecil tentang lawan
+  bicara, bukan gombalan langsung; pilihan terbuka soal detail-detail
+  kecil (naikin trust+love) vs to-the-point → reveal hobi (Fotografi
+  Jalanan) → mini-job asisten fotografer (job baru: "Asisten
+  Fotografer").
+- **Fahri** (guru, hangat/mentor, dad-joke energy) — `STORY.char_fahri`
+  (12 node): suka kasih nasihat (kadang gak diminta), pilihan
+  didengerin-dulu vs boleh-langsung-saran, vent soal ngajar → reveal
+  hobi (Membaca Filosofi) → mini-job bantu bazar sekolah (job baru:
+  "Asisten Pengajar").
 - Sudah divalidasi tiap tambahan: `node --check` + **audit graf node**
   (BFS dari node awal tiap thread yang baru DAN yang lama, 0 referensi
   rusak) + **integrasi DOM penuh pakai jsdom** — jalanin jalur lengkap
@@ -448,12 +459,13 @@ dari Langkah 6 sampai gilirannya masing-masing.
   sesuai perhitungan manual (termasuk saldo awal 150rb yang harus
   diperhitungkan). **Aturan "job cuma menetap sekali" (Langkah 7)
   terus dites ulang tiap nambah karakter baru** — sekarang terbukti
-  konsisten lintas 4 karakter berturut-turut (Barista dari Nadia tidak
-  pernah ketiban Desainer Grafis/Asisten Riset/Montir dari yang
-  lain-lain). `rivalRipple` (cuma sesama-gender) vs `globalRipple`
-  (semua karakter) juga dikonfirmasi ulang berperilaku beda sesuai
-  desain. Regresi ke konten Nadia/Kirana yang udah ada juga dicek,
-  aman tidak kesenggol.
-- Sisa 6 karakter (Bella, Intan, Raka, Fahri, Aldo — plus Dimas yang
-  masih perlu naskah utuh di luar gerbang overlap-nya) masih pakai
-  stub generik, nunggu giliran ditulis di sesi berikutnya.
+  konsisten lintas 6 karakter berturut-turut (job pertama yang
+  di-"ambil" — dari Nadia — tidak pernah ketiban job lain dari
+  Kirana/Salsa/Bagas/Raka/Fahri walau semua mini-job-nya diterima).
+  `rivalRipple` (cuma sesama-gender) vs `globalRipple` (semua
+  karakter) juga dikonfirmasi ulang berperilaku beda sesuai desain.
+  Regresi ke seluruh konten yang udah ada juga dicek tiap kali, aman
+  tidak kesenggol.
+- Sisa 4 karakter (Bella, Intan, Aldo — plus Dimas yang masih perlu
+  naskah utuh di luar gerbang overlap-nya) masih pakai stub generik,
+  nunggu giliran ditulis di sesi berikutnya.
