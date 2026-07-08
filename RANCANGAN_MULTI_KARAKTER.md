@@ -226,6 +226,29 @@ mekanisme "jadi pasangan" diimplementasi tanpa ini, ke-10 karakter
 - Efeknya juga ke §10.2 di bawah: pilihan starter karakter pun jadi
   cuma nunjukin 5 karakter lawan gender, bukan 10.
 
+**✅ SELESAI (implementasi):**
+- `core/state.js`: `profile.userGender` ditambah (`''`/`'m'`/`'f'`).
+- `core/story.js`: effect baru `setProfilePath` (buat nyimpen jawaban
+  fixed-choice, beda dari `input.savesTo` yang dipakai buat teks
+  bebas). Fungsi baru `Story.eligiblePartnerIds()` — filter 10
+  karakter ke lawan gender aja, return `[]` kalau gender belum
+  di-set (bukan "semua 0 kandidat", tapi "belum diputuskan").
+- Tutorial Asisten (`a_ack_user_name`) sekarang nyabang ke
+  `a_ask_gender` (node choice, 2 tombol: Laki-laki/Perempuan) sebelum
+  lanjut ke pertanyaan nama ibu. `a_profile_gate`'s `allFilled` check
+  diupdate ikut termasuk `profile.userGender`.
+- `apps/settings.js`: kontrol baru `genderRow()` (segmented 2-tombol,
+  gaya sama kayak toggle) di bagian Profil Cerita — bisa diubah
+  kapan aja, gak cuma pas tutorial.
+- `style.css`: styling `.settings-segmented`/`.settings-segment`.
+- Divalidasi: `node --check` semua file + simulasi headless
+  (`eligiblePartnerIds` 5/5 benar utk kedua gender, `setProfilePath`
+  jalan, gate `allFilled` include userGender) + **integrasi DOM**:
+  lompat ke node `a_ask_gender`, klik pilihan beneran, verifikasi
+  `profile.userGender` keisi & baris "oke, dicatat" muncul, buka app
+  Settings — nilai yang sama kebaca & bisa diganti dari sana,
+  `eligiblePartnerIds()` ikut berubah live.
+
 ### 10.2 Kontak muncul bertahap, bukan 10 sekaligus
 **Masalah:** Implementasi sekarang (`introduceAllCharacters`, efek dari
 Langkah 6) nambahin ke-10 karakter ke kontak sekaligus & diam-diam

@@ -73,13 +73,18 @@ const AppState = (function () {
                           // not only via one-off cutscenes.
       },
 
-      // ---- story profile: the only 3 things the player fills in
+      // ---- story profile: the only things the player fills in
       // manually (Pengaturan > Profil Cerita). Everyone else's name
       // is fixed story data — see core/characters.js. ----
       profile: {
-        user:    { name: '' }, // {{user}}
-        userMom: { name: '' }, // {{userMom}}
-        userDad: { name: '' }  // {{userDad}}
+        user:       { name: '' }, // {{user}}
+        userMom:    { name: '' }, // {{userMom}}
+        userDad:    { name: '' }, // {{userDad}}
+        userGender: ''            // 'f' | 'm' | '' (unset) — restricts which of
+                                  // the 10 characters are eligible "pasangan"
+                                  // candidates (opposite gender only). See
+                                  // Story.eligiblePartnerIds() in core/story.js
+                                  // and RANCANGAN_MULTI_KARAKTER.md §10.1.
       },
 
       // ---- the player's own mood stats (not tied to any one

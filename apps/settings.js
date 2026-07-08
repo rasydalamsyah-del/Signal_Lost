@@ -39,6 +39,21 @@
     `;
   }
 
+  // segmented 2-option selector — used for gender since it's a fixed
+  // choice, not free text. See RANCANGAN_MULTI_KARAKTER.md §10.1.
+  function genderRow(label, path) {
+    const value = getByPath(AppState.get(), path) || '';
+    return `
+      <div class="settings-field">
+        <label class="settings-field-label">${label}</label>
+        <div class="settings-segmented" data-path="${path}">
+          <button class="settings-segment ${value === 'm' ? 'active' : ''}" data-value="m">Laki-laki</button>
+          <button class="settings-segment ${value === 'f' ? 'active' : ''}" data-value="f">Perempuan</button>
+        </div>
+      </div>
+    `;
+  }
+
   function render(root) {
     root.innerHTML = `
       <div class="app-screen">
@@ -56,6 +71,7 @@
           <div class="settings-section-title">Profil Cerita</div>
           <p class="settings-hint">Cuma identitas kamu sendiri yang diisi manual — nama-nama lain di cerita sudah ditentukan (lihat 10 karakter di kontak).</p>
           ${textRow('Nama kamu', 'profile.user.name', 'Nama kamu')}
+          ${genderRow('Gender kamu', 'profile.userGender')}
           ${textRow('Ibu kamu', 'profile.userMom.name', 'Nama ibu kamu')}
           ${textRow('Ayah kamu', 'profile.userDad.name', 'Nama ayah kamu')}
 
@@ -77,6 +93,14 @@
     root.querySelectorAll('.settings-field-input').forEach(input => {
       input.addEventListener('change', () => {
         AppState.set(input.dataset.path, input.value.trim());
+      });
+    });
+
+    root.querySelectorAll('.settings-segment').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const path = btn.parentElement.dataset.path;
+        AppState.set(path, btn.dataset.value);
+        render(root);
       });
     });
 

@@ -506,6 +506,12 @@ button{ font-family:inherit; cursor:pointer; }
 }
 .settings-field-input::placeholder{ color:var(--dim); }
 .settings-field-input:focus{ outline:none; border-color:var(--signal); }
+.settings-segmented{ display:flex; gap:6px; }
+.settings-segment{
+  flex:1; padding:8px 0; text-align:center; font-size:12.5px; font-weight:600;
+  background:var(--static-2); border:1px solid var(--hairline); border-radius:8px; color:var(--dim);
+}
+.settings-segment.active{ background:rgba(76,224,210,0.16); border-color:var(--signal); color:var(--signal); }
 
 .save-slot{ background:var(--static); border:1px solid var(--hairline); border-radius:16px; padding:14px; margin-bottom:10px; display:flex; align-items:center; justify-content:space-between; }
 .save-slot-info .save-slot-title{ font-weight:600; font-size:13px; }

@@ -94,7 +94,7 @@ const Story = (function () {
         skipTo: {
           when: 'allFilled',
           paths: [
-            'profile.user.name', 'profile.userMom.name', 'profile.userDad.name'
+            'profile.user.name', 'profile.userMom.name', 'profile.userDad.name', 'profile.userGender'
           ],
           next: 'a_profile_prefilled'
         },
@@ -114,7 +114,28 @@ const Story = (function () {
         lines: ['btw aku lupa nanya, nama kamu siapa?'],
         input: { placeholder: 'Ketik nama kamu...', savesTo: 'profile.user.name', next: 'a_ack_user_name' }
       },
-      a_ack_user_name: { lines: ['oh, {{user}}. oke.'], next: 'a_ask_user_mom' },
+      a_ack_user_name: { lines: ['oh, {{user}}. oke.'], next: 'a_ask_gender' },
+
+      // gender ini fixed-choice (bukan input bebas kayak nama-nama
+      // lain) karena cuma 2 opsi, dan dipakai buat batasi kandidat
+      // "pasangan" ke lawan gender doang — lihat
+      // RANCANGAN_MULTI_KARAKTER.md §10.1 dan Story.eligiblePartnerIds()
+      a_ask_gender: {
+        lines: ['satu lagi — gender kamu apa?'],
+        choices: [
+          {
+            label: 'Laki-laki',
+            next: 'a_ack_gender',
+            effects: [{ type: 'setProfilePath', path: 'profile.userGender', value: 'm' }]
+          },
+          {
+            label: 'Perempuan',
+            next: 'a_ack_gender',
+            effects: [{ type: 'setProfilePath', path: 'profile.userGender', value: 'f' }]
+          }
+        ]
+      },
+      a_ack_gender: { lines: ['oke, dicatat.'], next: 'a_ask_user_mom' },
 
       a_ask_user_mom: {
         lines: ['nama ibu kamu?'],
@@ -1615,6 +1636,15 @@ const Story = (function () {
           break;
         }
 
+        // set an arbitrary profile.* path directly from a choice's
+        // effects — for profile fields that are a fixed set of
+        // options (like gender) rather than free text (which uses
+        // node.input/savesTo instead, see a_ask_user_name etc).
+        case 'setProfilePath': {
+          AppState.set(fx.path, fx.value);
+          break;
+        }
+
         // ---- job system (RANCANGAN_MULTI_KARAKTER.md §4) ----
         // a character offers work through dialogue, player accepts →
         // reward always lands in selfStats.money; if `fx.jobTitle` is
@@ -1658,6 +1688,18 @@ const Story = (function () {
   }
 
   function clamp01to100(n) { return Math.max(0, Math.min(100, n)); }
+
+  // ---- partner-candidate filtering (RANCANGAN_MULTI_KARAKTER.md §10.1) ----
+  // Which of the 10 characters are eligible "pasangan" candidates —
+  // opposite gender from the player only. Returns [] if the player
+  // hasn't answered the gender question yet (profile.userGender unset),
+  // so callers should treat an empty result as "not decided yet",
+  // not "nobody is eligible".
+  function eligiblePartnerIds() {
+    const gender = AppState.get().profile.userGender;
+    if (!gender) return [];
+    return allCharacterIds().filter(id => CHARACTERS[id].gender !== gender);
+  }
 
   // ---- job overlap check (RANCANGAN_MULTI_KARAKTER.md §4) ----
   // True once the player's own settled profession (selfIdentity.pekerjaan,
@@ -1727,6 +1769,7 @@ const Story = (function () {
     runEffectsOnce,
     recordInteraction,
     computeNeglect,
-    hasJobOverlap
+    hasJobOverlap,
+    eligiblePartnerIds
   };
 })();
