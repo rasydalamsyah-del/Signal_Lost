@@ -33,6 +33,16 @@
    equivalent `story` sub-object of its own instead, see below.)
    ============================================================ */
 
+// ---- day-of-week mapping (RANCANGAN_MULTI_KARAKTER.md §10.3) ----
+// meta.day is just a running integer (1, 2, 3, ...). Day 1 = Senin.
+// Used by the Pekerjaan app to match a job posting's schedule
+// (e.g. "Senin, Jumat, Minggu") against the current in-game day.
+const DAY_NAMES = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu', 'Minggu'];
+function dayOfWeek(day) {
+  const idx = ((day - 1) % 7 + 7) % 7; // guard against day <= 0, just in case
+  return DAY_NAMES[idx];
+}
+
 const AppState = (function () {
 
   // ---- build the runtime slice for all 10 baked-in characters from
@@ -111,6 +121,14 @@ const AppState = (function () {
       // denominator for each character's "attention ratio" half of the
       // neglect score (see Story.computeNeglect() in core/story.js).
       attention: { totalMessages: 0 },
+
+      // ---- persistent job postings, unlocked via dialogue once trust
+      // with a character is high enough (RANCANGAN_MULTI_KARAKTER.md
+      // §10.3). Separate from the old one-shot completeMiniJob favors —
+      // these show up in the "Pekerjaan" app on a weekly day+hour
+      // schedule, can be worked repeatedly (or once-forever), and can
+      // get permanently "fired" if missed too many times. ----
+      jobPostings: {},
 
       // ---- story progress for scripted threads that aren't one of
       // the 10 characters (currently just the old assistant tutorial).

@@ -21,6 +21,9 @@
   //   { when:'profileEquals', path:'profile.x', equals:val, next } —
   //     generic profile-path equality check (used for the gender-based
   //     starter-picker routing, RANCANGAN_MULTI_KARAKTER.md §10.2)
+  //   { when:'charStatGte', charId, stat, gte, next } — that character's
+  //     OWN stat (love/trust/jealousy/mood) is at/above threshold —
+  //     used to gate persistent job-posting unlocks, see §10.3
   function evalCondition(cond) {
     if (!cond) return false;
     if (cond.when === 'allFilled') {
@@ -38,6 +41,10 @@
     }
     if (cond.when === 'profileEquals') {
       return AppState.getPath(cond.path) === cond.equals;
+    }
+    if (cond.when === 'charStatGte') {
+      const c = AppState.get().characters[cond.charId];
+      return !!c && (c.stats[cond.stat] || 0) >= (cond.gte || 0);
     }
     return false;
   }

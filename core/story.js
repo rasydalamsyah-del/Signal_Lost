@@ -575,12 +575,45 @@ const Story = (function () {
         { type: 'adjustStat', target: 'char_nadia', stat: 'love', delta: 5 },
         { type: 'globalRipple', source: 'char_nadia', condition: { stat: 'love', gte: 10 }, targetStat: 'jealousy', delta: 2 }
       ],
-      next: 'char_nadia_milestone'
+      next: 'char_nadia_job_gate2'
     },
     char_nadia_minijob_decline: {
       lines: ['oke deh, nggak apa-apa kok. kapan-kapan aja kalo mood.'],
+      next: 'char_nadia_job_gate2'
+    },
+
+    // ---- gerbang lowongan kerja beneran (RANCANGAN_MULTI_KARAKTER.md
+    // §10.3) — beda dari completeMiniJob (bantuan sekali-jalan) di atas.
+    // Kalau trust ke Nadia udah cukup (>=3, tercapai dari pilihan
+    // gaya-ngobrol di awal), dia beneran nawarin shift tetap yang
+    // muncul di app "Pekerjaan" dengan jadwal. ----
+    char_nadia_job_gate2: {
+      lines: [],
+      skipTo: { when: 'charStatGte', charId: 'char_nadia', stat: 'trust', gte: 3, next: 'char_nadia_job_offer_real' },
       next: 'char_nadia_milestone'
     },
+    char_nadia_job_offer_real: {
+      lines: [
+        'eh serius, kamu keliatan cocok kerja bareng.',
+        'kalo kamu niat, aku bisa omongin ke manager buat kasih kamu shift tetap — Senin, Jumat, Minggu jam 1 siang.',
+        'gajinya lumayan, dan bisa kamu ambil tiap kali jadwalnya kebuka. tinggal cek di app Pekerjaan nanti'
+      ],
+      effects: [{
+        type: 'unlockJobPosting',
+        posting: {
+          id: 'job_barista_nadia',
+          title: 'Barista (shift tetap)',
+          charId: 'char_nadia',
+          salary: 40000,
+          type: 'recurring',
+          schedule: { days: ['Senin', 'Jumat', 'Minggu'], startMinute: 780, endMinute: 900 },
+          missThreshold: 5,
+          missBoundaryDays: 30
+        }
+      }],
+      next: 'char_nadia_milestone'
+    },
+
     char_nadia_milestone: {
       // sengaja tidak ada `next` — jalan buntu, nunggu lanjutan (Langkah 8 berikutnya)
       lines: ['btw seneng deh akhirnya ada temen ngobrol baru wkwk', 'chat-chat lagi ya, aku available kok kalo kamu butuh temen cerita']
@@ -1714,6 +1747,26 @@ const Story = (function () {
         // node.input/savesTo instead, see a_ask_user_name etc).
         case 'setProfilePath': {
           AppState.set(fx.path, fx.value);
+          break;
+        }
+
+        // open a persistent job posting (RANCANGAN_MULTI_KARAKTER.md
+        // §10.3) — separate from the one-shot completeMiniJob favor
+        // above. Idempotent: if this posting id already exists, does
+        // NOT reset its progress (miss log, lastWorkedDay, etc), so
+        // re-triggering the unlocking dialogue by accident is harmless.
+        // See core/jobs.js for the schedule/miss/fire logic this feeds.
+        case 'unlockJobPosting': {
+          const p = fx.posting;
+          if (!s.jobPostings[p.id]) {
+            s.jobPostings[p.id] = Object.assign({
+              missLog: [],
+              lastWorkedDay: null,
+              lastEvaluatedDay: s.meta.day - 1,
+              firedForever: false,
+              completedOnce: false
+            }, p);
+          }
           break;
         }
 

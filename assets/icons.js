@@ -33,6 +33,8 @@ const ICONS = {
 
   diri: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="10" r="3"/><path d="M7 20.4V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.4"/></svg>`,
 
+  pekerjaan: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/><path d="M2 13h20"/></svg>`,
+
   // ---- misc (nav bar, chat, status bar) ----
   arrowBack: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>`,
   home: `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>`,
@@ -57,5 +59,6 @@ const ICON_BG = {
   location: ['#8FE0FF', '#4CC3F5'],
   calendar: ['#FFB08A', '#FF7E4C'],
   settings: ['#9AA5B1', '#6B7580'],
-  diri:     ['#FF9AC1', '#FF5E96']
+  diri:     ['#FF9AC1', '#FF5E96'],
+  pekerjaan: ['#8FD9A8', '#4CAF50']
 };

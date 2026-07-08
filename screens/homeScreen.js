@@ -17,6 +17,7 @@
     { id: 'location', label: 'Location' },
     { id: 'calendar', label: 'Kalender' },
     { id: 'diri', label: 'Diri' },
+    { id: 'pekerjaan', label: 'Pekerjaan' },
     { id: 'settings', label: 'Pengaturan' }
   ];
 

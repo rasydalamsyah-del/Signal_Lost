@@ -387,6 +387,57 @@ jobPostings: {
   job posting juga? (kemungkinan besar: dibiarkan, karena beda konsep
   — bantuan sekali vs lowongan kerja beneran)
 
+**✅ SELESAI (implementasi):**
+- **`core/state.js`**: tambah `dayOfWeek(day)` (day 1 = Senin, wrap tiap
+  7 hari) + `jobPostings: {}` di `defaultData()`. **Bug sempat
+  ketemu & diperbaiki**: pas nambahin `jobPostings`, field
+  `attention: { totalMessages: 0 }` (dari Langkah 3, dipakai
+  `computeNeglect`) sempat gak sengaja ke-replace/ilang — ketauan pas
+  `grep` ulang, langsung diperbaiki sebelum lanjut.
+- **`core/jobs.js`** (baru) — modul `Jobs`: `isScheduledToday`,
+  `isActiveNow` (cek hari + jendela jam + belum dipecat/selesai),
+  `alreadyWorkedToday`, `reconcile`/`reconcileAll` (hitung "kelewatan"
+  **lazy** — dievaluasi tiap app Pekerjaan dibuka, bukan scheduler
+  background, sesuai keputusan di atas), `work` (bayar gaji, tandai
+  hari ini udah dikerjain, tandai selesai kalau `onceForever`), `list`,
+  `scheduleText`.
+- **`core/story.js`**: effect baru `unlockJobPosting` (bikin posting
+  baru di `AppState.jobPostings`, idempoten — gak reset progress kalau
+  dipicu ulang).
+- **`apps/dashchat.js`**: `evalCondition` nambah `{ when:'charStatGte',
+  charId, stat, gte, next }` — cek stat karakter sendiri (dipakai buat
+  nge-gate tawaran kerja tetap berdasar trust).
+- **Demo konkret di Nadia**: alur mini-job lama (`completeMiniJob`,
+  bantuan sekali) tetap ada, tapi sekarang lanjut ke gerbang baru
+  `char_nadia_job_gate2` — kalau trust Nadia udah ≥3 (tercapai dari
+  pilihan gaya-ngobrol paling awal), dia nawarin **shift tetap**
+  (`unlockJobPosting`, jadwal Senin/Jumat/Minggu 13.00-15.00, gaji
+  Rp40.000, `missThreshold:5`/`missBoundaryDays:30`) — beda dari
+  bantuan sekali-jalan sebelumnya.
+- **`apps/pekerjaan.js`** (baru) — app baru: render semua job posting
+  yang udah di-unlock, tiap kartu nunjukkin judul/karakter/gaji/jadwal/
+  status (Aktif sekarang / Udah dikerjain hari ini / Nunggu jadwal /
+  Dipecat / Selesai), tombol "Kerjakan" nyala cuma pas beneran aktif.
+- **`assets/icons.js`** + **`screens/homeScreen.js`**: ikon & entry app
+  "Pekerjaan" (tas kerja, gradient hijau) di home grid.
+- **`style.css`**: styling lengkap `.job-card`/`.job-status`/dll.
+- Sudah divalidasi: `node --check` semua file + simulasi headless
+  lengkap (`dayOfWeek` termasuk wrap, unlock+idempotency, aktif/tidak
+  berdasar hari DAN jam, tolak kerja dobel di hari sama, tracking
+  kelewatan + mekanisme dipecat pas nyampe threshold) + **integrasi
+  DOM penuh**: jalanin dialog Nadia via klik tombol sungguhan sampai
+  bener-bener nawarin shift tetap, buka app Pekerjaan asli, klik
+  tombol "Kerjakan" beneran (uang nambah, status berubah, tombol jadi
+  disabled), percobaan kerja kedua di hari sama ditolak, dan hari yang
+  gak sesuai jadwal correctly nunjukkin "Nunggu jadwal". **Sempat
+  ketemu 2 bug murni di skrip tes saya sendiri** (bukan di kode game):
+  (1) nyoba nge-set `meta.day` langsung lewat `AppState.set` — ternyata
+  gak valid karena `meta.day` itu turunan dari `ambientTick`, ke-reset
+  otomatis begitu `AppState.tick()` jalan lagi (mis. dari
+  `Router.navigate`); (2) salah hitung offset waktu yang bikin malah
+  lompat ke hari berikutnya. Dua-duanya diperbaiki di skrip tes,
+  dikonfirmasi ulang kode game-nya sendiri sudah benar dari awal.
+
 ---
 
 ## 9. Log progres implementasi
